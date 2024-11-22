@@ -47,19 +47,11 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
-contract WowFactoryImpl is
-    IWowFactory,
-    UUPSUpgradeable,
-    ReentrancyGuardUpgradeable,
-    OwnableUpgradeable
-{
+contract WowFactoryImpl is IWowFactory, UUPSUpgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
     address public immutable tokenImplementation;
     address public immutable bondingCurve;
 
-    constructor(
-        address _tokenImplementation,
-        address _bondingCurve
-    ) initializer {
+    constructor(address _tokenImplementation, address _bondingCurve) initializer {
         tokenImplementation = _tokenImplementation;
         bondingCurve = _bondingCurve;
     }
@@ -79,18 +71,9 @@ contract WowFactoryImpl is
     ) external payable nonReentrant returns (address) {
         bytes32 salt = _generateSalt(_tokenCreator, _tokenURI);
 
-        Wow token = Wow(
-            payable(Clones.cloneDeterministic(tokenImplementation, salt))
-        );
+        Wow token = Wow(payable(Clones.cloneDeterministic(tokenImplementation, salt)));
 
-        token.initialize{value: msg.value}(
-            _tokenCreator,
-            _platformReferrer,
-            bondingCurve,
-            _tokenURI,
-            _name,
-            _symbol
-        );
+        token.initialize{value: msg.value}(_tokenCreator, _platformReferrer, bondingCurve, _tokenURI, _name, _symbol);
 
         emit WowTokenCreated(
             address(this),
@@ -109,24 +92,20 @@ contract WowFactoryImpl is
     }
 
     /// @dev Generates a unique salt for deterministic deployment
-    function _generateSalt(
-        address _tokenCreator,
-        string memory _tokenURI
-    ) internal view returns (bytes32) {
-        return
-            keccak256(
-                abi.encodePacked(
-                    msg.sender,
-                    _tokenCreator,
-                    keccak256(abi.encodePacked(_tokenURI)),
-                    block.coinbase,
-                    block.number,
-                    block.prevrandao,
-                    block.timestamp,
-                    tx.gasprice,
-                    tx.origin
-                )
-            );
+    function _generateSalt(address _tokenCreator, string memory _tokenURI) internal view returns (bytes32) {
+        return keccak256(
+            abi.encodePacked(
+                msg.sender,
+                _tokenCreator,
+                keccak256(abi.encodePacked(_tokenURI)),
+                block.coinbase,
+                block.number,
+                block.prevrandao,
+                block.timestamp,
+                tx.gasprice,
+                tx.origin
+            )
+        );
     }
 
     /// @notice Initializes the factory proxy contract

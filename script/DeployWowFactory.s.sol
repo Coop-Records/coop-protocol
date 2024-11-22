@@ -57,16 +57,10 @@ contract DeployWowFactory is Script {
         // -----------NEW DEPLOYMENT-----------
 
         // Deploy WowFactoryImpl
-        WowFactoryImpl wowFactoryImpl = new WowFactoryImpl(
-            tokenImplementation,
-            bondingCurve
-        );
+        WowFactoryImpl wowFactoryImpl = new WowFactoryImpl(tokenImplementation, bondingCurve);
 
         // Initialize data for proxy
-        bytes memory initData = abi.encodeWithSelector(
-            WowFactoryImpl.initialize.selector,
-            defaultOwner
-        );
+        bytes memory initData = abi.encodeWithSelector(WowFactoryImpl.initialize.selector, defaultOwner);
 
         // Deploy proxy
         WowFactory proxy = new WowFactory(address(wowFactoryImpl), initData);

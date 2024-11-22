@@ -50,10 +50,7 @@ contract BondingCurve {
     uint256 public immutable A = 1060848709;
     uint256 public immutable B = 4379701787;
 
-    function getEthSellQuote(
-        uint256 currentSupply,
-        uint256 ethOrderSize
-    ) external pure returns (uint256) {
+    function getEthSellQuote(uint256 currentSupply, uint256 ethOrderSize) external pure returns (uint256) {
         uint256 deltaY = ethOrderSize;
         uint256 x0 = currentSupply;
         uint256 exp_b_x0 = uint256((int256(B.mulWad(x0))).expWad());
@@ -65,10 +62,7 @@ contract BondingCurve {
         return tokensToSell;
     }
 
-    function getTokenSellQuote(
-        uint256 currentSupply,
-        uint256 tokensToSell
-    ) external pure returns (uint256) {
+    function getTokenSellQuote(uint256 currentSupply, uint256 tokensToSell) external pure returns (uint256) {
         if (currentSupply < tokensToSell) revert InsufficientLiquidity();
         uint256 x0 = currentSupply;
         uint256 x1 = x0 - tokensToSell;
@@ -82,10 +76,7 @@ contract BondingCurve {
         return deltaY;
     }
 
-    function getEthBuyQuote(
-        uint256 currentSupply,
-        uint256 ethOrderSize
-    ) external pure returns (uint256) {
+    function getEthBuyQuote(uint256 currentSupply, uint256 ethOrderSize) external pure returns (uint256) {
         uint256 x0 = currentSupply;
         uint256 deltaY = ethOrderSize;
 
@@ -100,10 +91,7 @@ contract BondingCurve {
         return deltaX;
     }
 
-    function getTokenBuyQuote(
-        uint256 currentSupply,
-        uint256 tokenOrderSize
-    ) external pure returns (uint256) {
+    function getTokenBuyQuote(uint256 currentSupply, uint256 tokenOrderSize) external pure returns (uint256) {
         uint256 x0 = currentSupply;
         uint256 x1 = tokenOrderSize + currentSupply;
 

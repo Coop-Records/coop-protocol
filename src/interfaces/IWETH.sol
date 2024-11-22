@@ -10,11 +10,7 @@ interface IWETH {
 
     function transfer(address dst, uint256 wad) external returns (bool);
 
-    function transferFrom(
-        address src,
-        address dst,
-        uint256 wad
-    ) external returns (bool);
+    function transferFrom(address src, address dst, uint256 wad) external returns (bool);
 
     function balanceOf(address guy) external view returns (uint256);
 }
