@@ -58,30 +58,17 @@ contract DeployWowFactory is Script {
         address swapRouter = 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4; // Base Sepolia Swap Router
 
         // Deploy Wow token implementation
-        address tokenImplementation = address(
-            new Wow(
-                protocolFeeRecipient,
-                protocolRewards,
-                weth,
-                nonfungiblePositionManager,
-                swapRouter
-            )
-        );
+        address tokenImplementation =
+            address(new Wow(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter));
 
         address bondingCurve = 0x31eb0D332F0C13836CCEC763989915d0195AE494;
         address defaultOwner = COOP_RECS;
 
         // Deploy WowFactoryImpl
-        WowFactoryImpl wowFactoryImpl = new WowFactoryImpl(
-            tokenImplementation,
-            bondingCurve
-        );
+        WowFactoryImpl wowFactoryImpl = new WowFactoryImpl(tokenImplementation, bondingCurve);
 
         // Initialize data for proxy
-        bytes memory initData = abi.encodeWithSelector(
-            WowFactoryImpl.initialize.selector,
-            defaultOwner
-        );
+        bytes memory initData = abi.encodeWithSelector(WowFactoryImpl.initialize.selector, defaultOwner);
 
         // Deploy proxy
         WowFactory proxy = new WowFactory(address(wowFactoryImpl), initData);
