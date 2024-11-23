@@ -53,18 +53,26 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
-contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeable, IERC721Receiver {
+contract Wow is
+    IWow,
+    Initializable,
+    ERC20Upgradeable,
+    ReentrancyGuardUpgradeable,
+    IERC721Receiver
+{
     uint256 public constant MAX_TOTAL_SUPPLY = 1_000_000_000e18; // 1B tokens
     uint256 internal constant PRIMARY_MARKET_SUPPLY = 800_000_000e18; // 800M tokens
     uint256 internal constant SECONDARY_MARKET_SUPPLY = 200_000_000e18; // 200M tokens
     uint256 public constant TOTAL_FEE_BPS = 100; // 1%
     uint256 public constant TOKEN_CREATOR_FEE_BPS = 5000; // 50% (of TOTAL_FEE_BPS)
-    uint256 public constant PROTOCOL_FEE_BPS = 2000; // 20% (of TOTAL_FEE_BPS)
-    uint256 public constant PLATFORM_REFERRER_FEE_BPS = 1500; // 15% (of TOTAL_FEE_BPS)
-    uint256 public constant ORDER_REFERRER_FEE_BPS = 1500; // 15% (of TOTAL_FEE_BPS)
+    uint256 public constant PROTOCOL_FEE_BPS = 2500; // 20% (of TOTAL_FEE_BPS)
+    uint256 public constant PLATFORM_REFERRER_FEE_BPS = 0; // 15% (of TOTAL_FEE_BPS)
+    uint256 public constant ORDER_REFERRER_FEE_BPS = 2500; // 15% (of TOTAL_FEE_BPS)
     uint256 public constant MIN_ORDER_SIZE = 0.0000001 ether;
-    uint160 internal constant POOL_SQRT_PRICE_X96_WETH_0 = 400950665883918763141200546267337;
-    uint160 internal constant POOL_SQRT_PRICE_X96_TOKEN_0 = 15655546353934715619853339;
+    uint160 internal constant POOL_SQRT_PRICE_X96_WETH_0 =
+        400950665883918763141200546267337;
+    uint160 internal constant POOL_SQRT_PRICE_X96_TOKEN_0 =
+        15655546353934715619853339;
     uint24 internal constant LP_FEE = 500;
     int24 internal constant LP_TICK_LOWER = -887200;
     int24 internal constant LP_TICK_UPPER = 887200;
@@ -138,16 +146,30 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         // Determine the token0, token1, and sqrtPriceX96 values for the Uniswap V3 pool
         address token0 = WETH < address(this) ? WETH : address(this);
         address token1 = WETH < address(this) ? address(this) : WETH;
-        uint160 sqrtPriceX96 = token0 == WETH ? POOL_SQRT_PRICE_X96_WETH_0 : POOL_SQRT_PRICE_X96_TOKEN_0;
+        uint160 sqrtPriceX96 = token0 == WETH
+            ? POOL_SQRT_PRICE_X96_WETH_0
+            : POOL_SQRT_PRICE_X96_TOKEN_0;
 
         // Create and initialize the Uniswap V3 pool
-        poolAddress = INonfungiblePositionManager(nonfungiblePositionManager).createAndInitializePoolIfNecessary(
-            token0, token1, LP_FEE, sqrtPriceX96
-        );
+        poolAddress = INonfungiblePositionManager(nonfungiblePositionManager)
+            .createAndInitializePoolIfNecessary(
+                token0,
+                token1,
+                LP_FEE,
+                sqrtPriceX96
+            );
 
         // Execute the initial buy order if any ETH was sent
         if (msg.value > 0) {
-            buy(_tokenCreator, _tokenCreator, address(0), "", MarketType.BONDING_CURVE, 0, 0);
+            buy(
+                _tokenCreator,
+                _tokenCreator,
+                address(0),
+                "",
+                MarketType.BONDING_CURVE,
+                0,
+                0
+            );
         }
     }
 
@@ -199,15 +221,16 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             IWETH(WETH).approve(swapRouter, totalCost);
 
             // Set up the swap parameters
-            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-                tokenIn: WETH,
-                tokenOut: address(this),
-                fee: LP_FEE,
-                recipient: recipient,
-                amountIn: totalCost,
-                amountOutMinimum: minOrderSize,
-                sqrtPriceLimitX96: sqrtPriceLimitX96
-            });
+            ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+                .ExactInputSingleParams({
+                    tokenIn: WETH,
+                    tokenOut: address(this),
+                    fee: LP_FEE,
+                    recipient: recipient,
+                    amountIn: totalCost,
+                    amountOutMinimum: minOrderSize,
+                    sqrtPriceLimitX96: sqrtPriceLimitX96
+                });
 
             // Execute the swap
             trueOrderSize = ISwapRouter(swapRouter).exactInputSingle(params);
@@ -215,7 +238,13 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
         if (marketType == MarketType.BONDING_CURVE) {
             // Validate the order data
-            (totalCost, trueOrderSize, fee, refund, shouldGraduateMarket) = _validateBondingCurveBuy(minOrderSize);
+            (
+                totalCost,
+                trueOrderSize,
+                fee,
+                refund,
+                shouldGraduateMarket
+            ) = _validateBondingCurveBuy(minOrderSize);
 
             // Mint the tokens to the recipient
             _mint(recipient, trueOrderSize);
@@ -225,7 +254,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
             // Refund any excess ETH
             if (refund > 0) {
-                (bool success,) = refundRecipient.call{value: refund}("");
+                (bool success, ) = refundRecipient.call{value: refund}("");
                 if (!success) revert EthTransferFailed();
             }
         }
@@ -284,11 +313,18 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         uint256 truePayoutSize;
 
         if (marketType == MarketType.UNISWAP_POOL) {
-            truePayoutSize = _handleUniswapSell(tokensToSell, minPayoutSize, sqrtPriceLimitX96);
+            truePayoutSize = _handleUniswapSell(
+                tokensToSell,
+                minPayoutSize,
+                sqrtPriceLimitX96
+            );
         }
 
         if (marketType == MarketType.BONDING_CURVE) {
-            truePayoutSize = _handleBondingCurveSell(tokensToSell, minPayoutSize);
+            truePayoutSize = _handleBondingCurveSell(
+                tokensToSell,
+                minPayoutSize
+            );
         }
 
         // Calculate the fee
@@ -301,7 +337,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         _disperseFees(fee, orderReferrer);
 
         // Send the payout to the recipient
-        (bool success,) = recipient.call{value: payoutAfterFee}("");
+        (bool success, ) = recipient.call{value: payoutAfterFee}("");
         if (!success) revert EthTransferFailed();
 
         emit WowTokenSell(
@@ -331,15 +367,20 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
     /// @notice Returns current market type and address
     function state() external view returns (MarketState memory) {
-        return MarketState({
-            marketType: marketType,
-            marketAddress: marketType == MarketType.BONDING_CURVE ? address(this) : poolAddress
-        });
+        return
+            MarketState({
+                marketType: marketType,
+                marketAddress: marketType == MarketType.BONDING_CURVE
+                    ? address(this)
+                    : poolAddress
+            });
     }
 
     /// @notice The number of tokens that can be bought from a given amount of ETH.
     ///         This will revert if the market has graduated to the Uniswap V3 pool.
-    function getEthBuyQuote(uint256 ethOrderSize) public view returns (uint256) {
+    function getEthBuyQuote(
+        uint256 ethOrderSize
+    ) public view returns (uint256) {
         if (marketType == MarketType.UNISWAP_POOL) {
             revert MarketAlreadyGraduated();
         }
@@ -349,7 +390,9 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
     /// @notice The number of tokens for selling a given amount of ETH.
     ///         This will revert if the market has graduated to the Uniswap V3 pool.
-    function getEthSellQuote(uint256 ethOrderSize) public view returns (uint256) {
+    function getEthSellQuote(
+        uint256 ethOrderSize
+    ) public view returns (uint256) {
         if (marketType == MarketType.UNISWAP_POOL) {
             revert MarketAlreadyGraduated();
         }
@@ -359,7 +402,9 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
     /// @notice The amount of ETH needed to buy a given number of tokens.
     ///         This will revert if the market has graduated to the Uniswap V3 pool.
-    function getTokenBuyQuote(uint256 tokenOrderSize) public view returns (uint256) {
+    function getTokenBuyQuote(
+        uint256 tokenOrderSize
+    ) public view returns (uint256) {
         if (marketType == MarketType.UNISWAP_POOL) {
             revert MarketAlreadyGraduated();
         }
@@ -369,7 +414,9 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
     /// @notice The amount of ETH that can be received for selling a given number of tokens.
     ///         This will revert if the market has graduated to the Uniswap V3 pool.
-    function getTokenSellQuote(uint256 tokenOrderSize) public view returns (uint256) {
+    function getTokenSellQuote(
+        uint256 tokenOrderSize
+    ) public view returns (uint256) {
         if (marketType == MarketType.UNISWAP_POOL) {
             revert MarketAlreadyGraduated();
         }
@@ -404,32 +451,60 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     }
 
     /// @dev For receiving the Uniswap V3 LP NFT on market graduation.
-    function onERC721Received(address, address, uint256, bytes calldata) external view returns (bytes4) {
+    function onERC721Received(
+        address,
+        address,
+        uint256,
+        bytes calldata
+    ) external view returns (bytes4) {
         if (msg.sender != poolAddress) revert OnlyPool();
 
         return this.onERC721Received.selector;
     }
 
     /// @dev No-op to allow a swap on the pool to set the correct initial price, if needed
-    function uniswapV3SwapCallback(int256 amount0Delta, int256 amount1Delta, bytes calldata) external {}
+    function uniswapV3SwapCallback(
+        int256 amount0Delta,
+        int256 amount1Delta,
+        bytes calldata
+    ) external {}
 
     /// @dev Overrides ERC20's _update function to
     ///      - Prevent transfers to the pool if the market has not graduated.
     ///      - Emit the superset `WowTokenTransfer` event with each ERC20 transfer.
-    function _update(address from, address to, uint256 value) internal virtual override {
+    function _update(
+        address from,
+        address to,
+        uint256 value
+    ) internal virtual override {
         if (marketType == MarketType.BONDING_CURVE && to == poolAddress) {
             revert MarketNotGraduated();
         }
 
         super._update(from, to, value);
 
-        emit WowTokenTransfer(from, to, value, balanceOf(from), balanceOf(to), totalSupply());
+        emit WowTokenTransfer(
+            from,
+            to,
+            value,
+            balanceOf(from),
+            balanceOf(to),
+            totalSupply()
+        );
     }
 
     /// @dev Validates a bonding curve buy order and if necessary, recalculates the order data if the size is greater than the remaining supply
-    function _validateBondingCurveBuy(uint256 minOrderSize)
+    function _validateBondingCurveBuy(
+        uint256 minOrderSize
+    )
         internal
-        returns (uint256 totalCost, uint256 trueOrderSize, uint256 fee, uint256 refund, bool startMarket)
+        returns (
+            uint256 totalCost,
+            uint256 trueOrderSize,
+            uint256 fee,
+            uint256 refund,
+            bool startMarket
+        )
     {
         // Set the total cost to the amount of ETH sent
         totalCost = msg.value;
@@ -441,7 +516,10 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         uint256 remainingEth = totalCost - fee;
 
         // Get quote for the number of tokens that can be bought with the amount of ETH remaining
-        trueOrderSize = bondingCurve.getEthBuyQuote(totalSupply(), remainingEth);
+        trueOrderSize = bondingCurve.getEthBuyQuote(
+            totalSupply(),
+            remainingEth
+        );
 
         // Ensure the order size is greater than the minimum order size
         if (trueOrderSize < minOrderSize) revert SlippageBoundsExceeded();
@@ -460,7 +538,10 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             trueOrderSize = maxRemainingTokens;
 
             // Calculate the amount of ETH needed to buy the remaining tokens
-            uint256 ethNeeded = bondingCurve.getTokenBuyQuote(totalSupply(), trueOrderSize);
+            uint256 ethNeeded = bondingCurve.getTokenBuyQuote(
+                totalSupply(),
+                trueOrderSize
+            );
 
             // Recalculate the fee with the updated order size
             fee = _calculateFee(ethNeeded, TOTAL_FEE_BPS);
@@ -478,9 +559,15 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     }
 
     /// @dev Handles a bonding curve sell order
-    function _handleBondingCurveSell(uint256 tokensToSell, uint256 minPayoutSize) private returns (uint256) {
+    function _handleBondingCurveSell(
+        uint256 tokensToSell,
+        uint256 minPayoutSize
+    ) private returns (uint256) {
         // Get quote for the number of ETH that can be received for the number of tokens to sell
-        uint256 payout = bondingCurve.getTokenSellQuote(totalSupply(), tokensToSell);
+        uint256 payout = bondingCurve.getTokenSellQuote(
+            totalSupply(),
+            tokensToSell
+        );
 
         // Ensure the payout is greater than the minimum payout size
         if (payout < minPayoutSize) revert SlippageBoundsExceeded();
@@ -495,10 +582,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     }
 
     /// @dev Handles a Uniswap V3 sell order
-    function _handleUniswapSell(uint256 tokensToSell, uint256 minPayoutSize, uint160 sqrtPriceLimitX96)
-        private
-        returns (uint256)
-    {
+    function _handleUniswapSell(
+        uint256 tokensToSell,
+        uint256 minPayoutSize,
+        uint160 sqrtPriceLimitX96
+    ) private returns (uint256) {
         // Transfer the tokens from the seller to this contract
         transfer(address(this), tokensToSell);
 
@@ -506,15 +594,16 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         this.approve(swapRouter, tokensToSell);
 
         // Set up the swap parameters
-        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter.ExactInputSingleParams({
-            tokenIn: address(this),
-            tokenOut: WETH,
-            fee: LP_FEE,
-            recipient: address(this),
-            amountIn: tokensToSell,
-            amountOutMinimum: minPayoutSize,
-            sqrtPriceLimitX96: sqrtPriceLimitX96
-        });
+        ISwapRouter.ExactInputSingleParams memory params = ISwapRouter
+            .ExactInputSingleParams({
+                tokenIn: address(this),
+                tokenOut: WETH,
+                fee: LP_FEE,
+                recipient: address(this),
+                amountIn: tokensToSell,
+                amountOutMinimum: minPayoutSize,
+                sqrtPriceLimitX96: sqrtPriceLimitX96
+            });
 
         // Execute the swap
         uint256 payout = ISwapRouter(swapRouter).exactInputSingle(params);
@@ -538,8 +627,16 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         _mint(address(this), SECONDARY_MARKET_SUPPLY);
 
         // Approve the nonfungible position manager to transfer the WETH and tokens
-        SafeERC20.safeIncreaseAllowance(IERC20(WETH), address(nonfungiblePositionManager), ethLiquidity);
-        SafeERC20.safeIncreaseAllowance(this, address(nonfungiblePositionManager), SECONDARY_MARKET_SUPPLY);
+        SafeERC20.safeIncreaseAllowance(
+            IERC20(WETH),
+            address(nonfungiblePositionManager),
+            ethLiquidity
+        );
+        SafeERC20.safeIncreaseAllowance(
+            this,
+            address(nonfungiblePositionManager),
+            SECONDARY_MARKET_SUPPLY
+        );
 
         // Determine the token order
         bool isWethToken0 = address(WETH) < address(this);
@@ -549,35 +646,53 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         uint256 amount1 = isWethToken0 ? SECONDARY_MARKET_SUPPLY : ethLiquidity;
 
         // Get the current and desired price of the pool
-        uint160 currentSqrtPriceX96 = IUniswapV3Pool(poolAddress).slot0().sqrtPriceX96;
-        uint160 desiredSqrtPriceX96 = isWethToken0 ? POOL_SQRT_PRICE_X96_WETH_0 : POOL_SQRT_PRICE_X96_TOKEN_0;
+        uint160 currentSqrtPriceX96 = IUniswapV3Pool(poolAddress)
+            .slot0()
+            .sqrtPriceX96;
+        uint160 desiredSqrtPriceX96 = isWethToken0
+            ? POOL_SQRT_PRICE_X96_WETH_0
+            : POOL_SQRT_PRICE_X96_TOKEN_0;
 
         // If the current price is not the desired price, set the desired price
         if (currentSqrtPriceX96 != desiredSqrtPriceX96) {
             bool swap0To1 = currentSqrtPriceX96 > desiredSqrtPriceX96;
-            IUniswapV3Pool(poolAddress).swap(address(this), swap0To1, 100, desiredSqrtPriceX96, "");
+            IUniswapV3Pool(poolAddress).swap(
+                address(this),
+                swap0To1,
+                100,
+                desiredSqrtPriceX96,
+                ""
+            );
         }
 
         // Set up the liquidity position mint parameters
-        INonfungiblePositionManager.MintParams memory params = INonfungiblePositionManager.MintParams({
-            token0: token0,
-            token1: token1,
-            fee: LP_FEE,
-            tickLower: LP_TICK_LOWER,
-            tickUpper: LP_TICK_UPPER,
-            amount0Desired: amount0,
-            amount1Desired: amount1,
-            amount0Min: 0,
-            amount1Min: 0,
-            recipient: address(this),
-            deadline: block.timestamp
-        });
+        INonfungiblePositionManager.MintParams
+            memory params = INonfungiblePositionManager.MintParams({
+                token0: token0,
+                token1: token1,
+                fee: LP_FEE,
+                tickLower: LP_TICK_LOWER,
+                tickUpper: LP_TICK_UPPER,
+                amount0Desired: amount0,
+                amount1Desired: amount1,
+                amount0Min: 0,
+                amount1Min: 0,
+                recipient: address(this),
+                deadline: block.timestamp
+            });
 
         // Mint the liquidity position to this contract. It will be non-transferable and fees will be non-claimable.
-        (uint256 positionId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
+        (uint256 positionId, , , ) = INonfungiblePositionManager(
+            nonfungiblePositionManager
+        ).mint(params);
 
         emit WowMarketGraduated(
-            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, positionId, marketType
+            address(this),
+            poolAddress,
+            ethLiquidity,
+            SECONDARY_MARKET_SUPPLY,
+            positionId,
+            marketType
         );
     }
 
@@ -588,10 +703,16 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         }
 
         uint256 tokenCreatorFee = _calculateFee(_fee, TOKEN_CREATOR_FEE_BPS);
-        uint256 platformReferrerFee = _calculateFee(_fee, PLATFORM_REFERRER_FEE_BPS);
+        uint256 platformReferrerFee = _calculateFee(
+            _fee,
+            PLATFORM_REFERRER_FEE_BPS
+        );
         uint256 orderReferrerFee = _calculateFee(_fee, ORDER_REFERRER_FEE_BPS);
         uint256 protocolFee = _calculateFee(_fee, PROTOCOL_FEE_BPS);
-        uint256 totalFee = tokenCreatorFee + platformReferrerFee + orderReferrerFee + protocolFee;
+        uint256 totalFee = tokenCreatorFee +
+            platformReferrerFee +
+            orderReferrerFee +
+            protocolFee;
 
         address[] memory recipients = new address[](4);
         uint256[] memory amounts = new uint256[](4);
@@ -613,7 +734,12 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         amounts[3] = protocolFee;
         reasons[3] = bytes4(keccak256("WOW_PROTOCOL_FEE"));
 
-        IProtocolRewards(protocolRewards).depositBatch{value: totalFee}(recipients, amounts, reasons, "");
+        IProtocolRewards(protocolRewards).depositBatch{value: totalFee}(
+            recipients,
+            amounts,
+            reasons,
+            ""
+        );
 
         emit WowTokenFees(
             tokenCreator,
@@ -628,7 +754,10 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     }
 
     /// @dev Calculates the fee for a given amount and basis points.
-    function _calculateFee(uint256 amount, uint256 bps) internal pure returns (uint256) {
+    function _calculateFee(
+        uint256 amount,
+        uint256 bps
+    ) internal pure returns (uint256) {
         return (amount * bps) / 10_000;
     }
 }
