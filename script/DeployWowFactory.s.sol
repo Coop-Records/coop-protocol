@@ -6,6 +6,7 @@ import {WowFactoryImpl} from "../src/WowFactoryImpl.sol";
 import {WowFactory} from "../src/WowFactory.sol";
 import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
 import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
+import {Wow} from "../src/Wow.sol";
 
 /*
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
@@ -47,14 +48,21 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 contract DeployWowFactory is Script {
     function run() public {
         vm.startBroadcast();
+        address COOP_RECS = 0x512b55b00d744fC2eDB8474f223a7498c3e5a7ce; // CoopRecs.base.eth
 
-        // Wow existing token implementation
-        address tokenImplementation = 0x42bc7e6053E6C1BF55Cc7F62f65a1af0D063ff2d;
+        // Wow constructor addresses
+        address protocolFeeRecipient = COOP_RECS;
+        address protocolRewards = 0x7777777F279eba3d3Ad8F4E708545291A6fDBA8B; // Base Sepolia ProtocolRewards
+        address weth = 0x4200000000000000000000000000000000000006; // Base Sepolia WETH
+        address nonfungiblePositionManager = 0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2; // Base Sepolia NonfungiblePositionManager
+        address swapRouter = 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4; // Base Sepolia Swap Router
+
+        // Deploy Wow token implementation
+        address tokenImplementation =
+            address(new Wow(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter));
+
         address bondingCurve = 0x31eb0D332F0C13836CCEC763989915d0195AE494;
-        // TODO: Set this to COOP RECS
-        address defaultOwner = 0x58BE4B98fec63651287A2741665E7a200De43916;
-
-        // -----------NEW DEPLOYMENT-----------
+        address defaultOwner = COOP_RECS;
 
         // Deploy WowFactoryImpl
         WowFactoryImpl wowFactoryImpl = new WowFactoryImpl(tokenImplementation, bondingCurve);
