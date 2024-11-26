@@ -65,12 +65,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     uint256 public constant MIN_ORDER_SIZE = 0.0000001 ether;
     uint160 internal constant POOL_SQRT_PRICE_X96_WETH_0 = 400950665883918763141200546267337;
     uint160 internal constant POOL_SQRT_PRICE_X96_TOKEN_0 = 15655546353934715619853339;
-    uint24 internal constant LP_FEE = 500;
+    uint24 internal constant LP_FEE = 100; // 1%
     int24 internal constant LP_TICK_LOWER = -887200;
     int24 internal constant LP_TICK_UPPER = 887200;
 
     address public immutable WETH;
-    address public immutable nonfungiblePositionManager;
     address public immutable swapRouter;
     address public immutable protocolFeeRecipient;
     address public immutable protocolRewards;
@@ -81,6 +80,12 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     address public poolAddress;
     address public tokenCreator;
     string public tokenURI;
+
+    /// @notice The ID of the Uniswap V3 LP position NFT
+    uint256 public lpPositionId;
+
+    /// @notice The Uniswap V3 NonfungiblePositionManager contract
+    INonfungiblePositionManager public immutable nonfungiblePositionManager;
 
     constructor(
         address _protocolFeeRecipient,
@@ -98,7 +103,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         protocolFeeRecipient = _protocolFeeRecipient;
         protocolRewards = _protocolRewards;
         WETH = _weth;
-        nonfungiblePositionManager = _nonfungiblePositionManager;
+        nonfungiblePositionManager = INonfungiblePositionManager(_nonfungiblePositionManager);
         swapRouter = _swapRouter;
     }
 
@@ -573,11 +578,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             deadline: block.timestamp
         });
 
-        // Mint the liquidity position to this contract. It will be non-transferable and fees will be non-claimable.
-        (uint256 positionId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
+        // Mint and store the position ID
+        (lpPositionId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
 
         emit WowMarketGraduated(
-            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, positionId, marketType
+            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, lpPositionId, marketType
         );
     }
 
@@ -630,5 +635,58 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     /// @dev Calculates the fee for a given amount and basis points.
     function _calculateFee(uint256 amount, uint256 bps) internal pure returns (uint256) {
         return (amount * bps) / 10_000;
+    }
+
+    /// @notice Collects and disperses accumulated trading fees
+    /// @return amount0 Amount of token0 collected and dispersed
+    /// @return amount1 Amount of token1 collected and dispersed
+    function collectFees() external returns (uint256 amount0, uint256 amount1) {
+        if (marketType != MarketType.UNISWAP_POOL) revert InvalidMarketType();
+
+        // Collect fees to this contract
+        (amount0, amount1) = nonfungiblePositionManager.collect(
+            INonfungiblePositionManager.CollectParams({
+                tokenId: lpPositionId,
+                recipient: address(this),
+                amount0Max: type(uint128).max,
+                amount1Max: type(uint128).max
+            })
+        );
+
+        // Determine which token is WETH
+        bool isWethToken0 = address(WETH) < address(this);
+        
+        // Disperse both tokens
+        _disperseToken(amount0, isWethToken0);
+        _disperseToken(amount1, !isWethToken0);
+
+        emit FeesCollected(address(this), amount0, amount1);
+        return (amount0, amount1);
+    }
+
+    /// @dev Helper function to disperse either WETH or Wow token fees
+    /// @param amount Amount of tokens to disperse
+    /// @param isWeth Whether the token being dispersed is WETH
+    function _disperseToken(uint256 amount, bool isWeth) private {
+        if (amount > 0) {
+            uint256 creatorShare = (amount * TOKEN_CREATOR_FEE_BPS) / 10000;
+            uint256 protocolShare = (amount * PROTOCOL_FEE_BPS) / 10000;
+            uint256 platformShare = (amount * PLATFORM_REFERRER_FEE_BPS) / 10000;
+            uint256 orderShare = (amount * ORDER_REFERRER_FEE_BPS) / 10000;
+
+            address actualPlatformRecipient = platformReferrer == address(0) ? protocolFeeRecipient : platformReferrer;
+
+            if (isWeth) {
+                IWETH(WETH).transfer(tokenCreator, creatorShare);
+                IWETH(WETH).transfer(protocolFeeRecipient, protocolShare);
+                IWETH(WETH).transfer(actualPlatformRecipient, platformShare);
+                IWETH(WETH).transfer(protocolFeeRecipient, orderShare);
+            } else {
+                _transfer(address(this), tokenCreator, creatorShare);
+                _transfer(address(this), protocolFeeRecipient, protocolShare);
+                _transfer(address(this), actualPlatformRecipient, platformShare);
+                _transfer(address(this), protocolFeeRecipient, orderShare);
+            }
+        }
     }
 }

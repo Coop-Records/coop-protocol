@@ -175,6 +175,16 @@ interface IWow {
         uint256 protocolFee
     );
 
+    /// @notice Emitted when fees are collected from lp
+    /// @param protocolFeeRecipient The address of the protocol fee recipient
+    /// @param amount0 The fee for amount0
+    /// @param amount1 The fee for amount1
+    event FeesCollected(
+        address protocolFeeRecipient,
+        uint256 amount0,
+        uint256 amount1
+    );
+
     /// @notice Emitted when a market graduates
     /// @param tokenAddress The address of the token
     /// @param poolAddress The address of the pool
@@ -257,4 +267,9 @@ interface IWow {
     /// @notice Returns the address of the platform referrer
     /// @return The platform referrer's address
     function platformReferrer() external view returns (address);
+
+    /// @notice Collects accumulated trading fees
+    /// @return amount0 Amount of token0 collected
+    /// @return amount1 Amount of token1 collected
+    function collectFees() external returns (uint256 amount0, uint256 amount1);
 }
