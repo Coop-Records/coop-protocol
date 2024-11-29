@@ -179,11 +179,7 @@ interface IWow {
     /// @param protocolFeeRecipient The address of the protocol fee recipient
     /// @param amount0 The fee for amount0
     /// @param amount1 The fee for amount1
-    event FeesCollected(
-        address protocolFeeRecipient,
-        uint256 amount0,
-        uint256 amount1
-    );
+    event FeesCollected(address protocolFeeRecipient, uint256 amount0, uint256 amount1);
 
     /// @notice Emitted when a market graduates
     /// @param tokenAddress The address of the token

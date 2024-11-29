@@ -54,9 +54,9 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
 contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeable, IERC721Receiver {
-    uint256 public constant MAX_TOTAL_SUPPLY = 1_000_000_000e18; // 1B tokens
-    uint256 internal constant PRIMARY_MARKET_SUPPLY = 800_000_000e18; // 800M tokens
-    uint256 internal constant SECONDARY_MARKET_SUPPLY = 200_000_000e18; // 200M tokens
+    uint256 public constant MAX_TOTAL_SUPPLY = 15_625_000e18; // 1B tokens
+    uint256 internal constant PRIMARY_MARKET_SUPPLY = 12_500_000e18; // 800M tokens
+    uint256 internal constant SECONDARY_MARKET_SUPPLY = 3_125_000e18; // 200M tokens
     uint256 public constant TOTAL_FEE_BPS = 100; // 1%
     uint256 public constant TOKEN_CREATOR_FEE_BPS = 5000; // 50% (of TOTAL_FEE_BPS)
     uint256 public constant PROTOCOL_FEE_BPS = 2500; // 25% (of TOTAL_FEE_BPS)
@@ -655,7 +655,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
         // Determine which token is WETH
         bool isWethToken0 = address(WETH) < address(this);
-        
+
         // Disperse both tokens
         _disperseToken(amount0, isWethToken0);
         _disperseToken(amount1, !isWethToken0);
