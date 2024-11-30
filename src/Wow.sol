@@ -16,42 +16,15 @@ import {IProtocolRewards} from "./interfaces/IProtocolRewards.sol";
 import {IWETH} from "./interfaces/IWETH.sol";
 import {BondingCurve} from "./BondingCurve.sol";
 
-/*
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWNXK0OkkkkkkO0KXWWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWNOdl:'...        ...':lx0XWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMW0d:.                        .:d0NMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMWKd;.                              .;dKWMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMW0l.                                    .l0WMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMNKOkkxkO0KOl.                                        .lKWMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMW0l'.       ..                                            'xNMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMO'   .',,,.                                                .lXMMMMMMMMMMMMMMMMMM
-MMMMMMMMMWo   ,0NWWK:                                                  cXMMMMMMMMMMMMMMMMM
-MMMMMMMMMMk.  .xWMNo                      .',,,,'.                      oNMMMMMMMMMMMMMMMM
-MMMMMMMMMMNo.  .oXx.                  .,oOKNWWWWNKOo,                   .kWMMMMMMMMMMMMMMM
-MMMMMMMMMMMNx.   '.                  ,kNMMMMMMMMMMMMNk,                  :XMMMMMMMMMMMMMMM
-MMMMMMMMMMMMW0:.                    cXMMMMMMMMMMMMMMMMK:                 .kMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMNk;                  ,0MMMMMMXkddkNMMMMMM0'                 dWMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMNk;                cNMMMMMNo   .oWMMMMMX:                 oWMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMNO:.             ;XMMMMMW0c;;l0WMMMMMK,                 oWMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMW0l'           .dWMMMMMMMWWMMMMMMMNo.                .kMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMNO0WMMXx:.         .oXMMMMMMMMMMMMMMXl.                 ,KMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMWd';xXWMWKd;.        'o0NMMMMMMMWNOo'                  .dWMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMX:  .lONMMW0o,.       .':looool:'.                    .OWMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMM0;    ,o0NMMN0d;.                                     'dNMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMM0;     .,o0NMMWKxc.                               ..   :0WMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMXl.      .,lONWMWXOo;.                         .lK0;   'OWMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMNk,         'cxKWMMWKkl:;.                   ,kWMMXl   ,0MMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMXd'          .,lkXWMMMWKko;..            .oXMMMMM0,  .dWMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMXx;.           .;ok0XWMMWX0xl;..       .,;cclcc,   .kMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMWKd;.            ..;lx0NWMMWX0koc;'..          .;kWMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMWXko:,..           .'cxKWMMMMMWNK0OxdolllodkKWMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMNX0kxolllccllooxk0NWMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
-MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
+/* 
+    !!!         !!!         !!!    
+    !!!         !!!         !!!    
+    !!!         !!!         !!!    
+    !!!         !!!         !!!    
+    !!!         !!!         !!!    
+    !!!         !!!         !!!    
+
+    WOW         WOW         WOW    
 */
 contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeable, IERC721Receiver {
     uint256 public constant MAX_TOTAL_SUPPLY = 1_000_000_000e18; // 1B tokens
@@ -59,15 +32,17 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     uint256 internal constant SECONDARY_MARKET_SUPPLY = 200_000_000e18; // 200M tokens
     uint256 public constant TOTAL_FEE_BPS = 100; // 1%
     uint256 public constant TOKEN_CREATOR_FEE_BPS = 5000; // 50% (of TOTAL_FEE_BPS)
-    uint256 public constant PROTOCOL_FEE_BPS = 2500; // 25% (of TOTAL_FEE_BPS)
-    uint256 public constant PLATFORM_REFERRER_FEE_BPS = 0; // 0% (of TOTAL_FEE_BPS)
-    uint256 public constant ORDER_REFERRER_FEE_BPS = 2500; // 25% (of TOTAL_FEE_BPS)
+    uint256 public constant PROTOCOL_FEE_BPS = 2000; // 20% (of TOTAL_FEE_BPS)
+    uint256 public constant PLATFORM_REFERRER_FEE_BPS = 1500; // 15% (of TOTAL_FEE_BPS)
+    uint256 public constant ORDER_REFERRER_FEE_BPS = 1500; // 15% (of TOTAL_FEE_BPS)
     uint256 public constant MIN_ORDER_SIZE = 0.0000001 ether;
     uint160 internal constant POOL_SQRT_PRICE_X96_WETH_0 = 400950665883918763141200546267337;
     uint160 internal constant POOL_SQRT_PRICE_X96_TOKEN_0 = 15655546353934715619853339;
-    uint24 internal constant LP_FEE = 500;
+    uint24 internal constant LP_FEE = 10000;
     int24 internal constant LP_TICK_LOWER = -887200;
     int24 internal constant LP_TICK_UPPER = 887200;
+    uint256 internal constant TOKEN_CREATOR_SECONDARY_REWARDS_BPS = 5000; // 50% (of LP_FEE)
+    uint256 internal constant PLATFORM_REFERRER_SECONDARY_REWARDS_BPS = 2500; // 25% (of LP_FEE)
 
     address public immutable WETH;
     address public immutable nonfungiblePositionManager;
@@ -81,6 +56,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     address public poolAddress;
     address public tokenCreator;
     string public tokenURI;
+    uint256 public lpTokenId;
 
     constructor(
         address _protocolFeeRecipient,
@@ -177,12 +153,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         // Ensure the recipient is not the zero address
         if (recipient == address(0)) revert AddressZero();
 
-        // Initialize variables to store the total cost, true order size, fee, refund, and whether the market should graduate
+        // Initialize variables to store the total cost, true order size, fee, and refund if applicable
         uint256 totalCost;
         uint256 trueOrderSize;
         uint256 fee;
         uint256 refund;
-        bool shouldGraduateMarket;
 
         if (marketType == MarketType.UNISWAP_POOL) {
             // Calculate the fee
@@ -211,9 +186,15 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
             // Execute the swap
             trueOrderSize = ISwapRouter(swapRouter).exactInputSingle(params);
+
+            // Handle any secondary rewards
+            _handleSecondaryRewards();
         }
 
         if (marketType == MarketType.BONDING_CURVE) {
+            // Used to determine if the market should graduate
+            bool shouldGraduateMarket;
+
             // Validate the order data
             (totalCost, trueOrderSize, fee, refund, shouldGraduateMarket) = _validateBondingCurveBuy(minOrderSize);
 
@@ -228,11 +209,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
                 (bool success,) = refundRecipient.call{value: refund}("");
                 if (!success) revert EthTransferFailed();
             }
-        }
 
-        // Start the market if this is the final bonding market buy order.
-        if (shouldGraduateMarket) {
-            _graduateMarket();
+            // Start the market if this is the final bonding market buy order.
+            if (shouldGraduateMarket) {
+                _graduateMarket();
+            }
         }
 
         emit WowTokenBuy(
@@ -304,6 +285,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         (bool success,) = recipient.call{value: payoutAfterFee}("");
         if (!success) revert EthTransferFailed();
 
+        // Handle any secondary rewards
+        if (marketType == MarketType.UNISWAP_POOL) {
+            _handleSecondaryRewards();
+        }
+
         emit WowTokenSell(
             msg.sender,
             recipient,
@@ -327,6 +313,19 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         if (marketType == MarketType.BONDING_CURVE) revert MarketNotGraduated();
 
         _burn(msg.sender, tokensToBurn);
+    }
+
+    /// @notice Force claim any accrued secondary rewards from the market's liquidity position.
+    /// @dev This function is a fallback, secondary rewards will be claimed automatically on each buy and sell.
+    /// @param pushEthRewards Whether to push the ETH directly to the recipients.
+    function claimSecondaryRewards(bool pushEthRewards) external {
+        SecondaryRewards memory rewards = _handleSecondaryRewards();
+
+        if (rewards.totalAmountEth > 0 && pushEthRewards) {
+            IProtocolRewards(protocolRewards).withdrawFor(tokenCreator, rewards.creatorAmountEth);
+            IProtocolRewards(protocolRewards).withdrawFor(platformReferrer, rewards.platformReferrerAmountEth);
+            IProtocolRewards(protocolRewards).withdrawFor(protocolFeeRecipient, rewards.protocolAmountEth);
+        }
     }
 
     /// @notice Returns current market type and address
@@ -573,11 +572,11 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             deadline: block.timestamp
         });
 
-        // Mint the liquidity position to this contract. It will be non-transferable and fees will be non-claimable.
-        (uint256 positionId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
+        // Mint the liquidity position to this contract and store the token id.
+        (lpTokenId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
 
         emit WowMarketGraduated(
-            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, positionId, marketType
+            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, lpTokenId, marketType
         );
     }
 
@@ -625,6 +624,79 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             orderReferrerFee,
             protocolFee
         );
+    }
+
+    function _handleSecondaryRewards() internal returns (SecondaryRewards memory) {
+        if (marketType == MarketType.BONDING_CURVE) revert MarketNotGraduated();
+
+        INonfungiblePositionManager.CollectParams memory params = INonfungiblePositionManager.CollectParams({
+            tokenId: lpTokenId,
+            recipient: address(this),
+            amount0Max: type(uint128).max,
+            amount1Max: type(uint128).max
+        });
+
+        (uint256 totalAmountToken0, uint256 totalAmountToken1) =
+            INonfungiblePositionManager(nonfungiblePositionManager).collect(params);
+
+        address token0 = WETH < address(this) ? WETH : address(this);
+        address token1 = WETH < address(this) ? address(this) : WETH;
+
+        SecondaryRewards memory rewards;
+
+        rewards = _transferRewards(token0, totalAmountToken0, rewards);
+        rewards = _transferRewards(token1, totalAmountToken1, rewards);
+
+        emit WowTokenSecondaryRewards(rewards);
+
+        return rewards;
+    }
+
+    function _transferRewards(address token, uint256 totalAmount, SecondaryRewards memory rewards)
+        internal
+        returns (SecondaryRewards memory)
+    {
+        if (totalAmount > 0) {
+            if (token == WETH) {
+                IWETH(WETH).withdraw(totalAmount);
+
+                rewards.totalAmountEth = totalAmount;
+                rewards.creatorAmountEth = _calculateFee(totalAmount, TOKEN_CREATOR_SECONDARY_REWARDS_BPS);
+                rewards.platformReferrerAmountEth = _calculateFee(totalAmount, PLATFORM_REFERRER_SECONDARY_REWARDS_BPS);
+                rewards.protocolAmountEth =
+                    rewards.totalAmountEth - rewards.creatorAmountEth - rewards.platformReferrerAmountEth;
+
+                address[] memory recipients = new address[](3);
+                recipients[0] = tokenCreator;
+                recipients[1] = platformReferrer;
+                recipients[2] = protocolFeeRecipient;
+
+                uint256[] memory amounts = new uint256[](3);
+                amounts[0] = rewards.creatorAmountEth;
+                amounts[1] = rewards.platformReferrerAmountEth;
+                amounts[2] = rewards.protocolAmountEth;
+
+                bytes4[] memory reasons = new bytes4[](3);
+                reasons[0] = bytes4(keccak256("WOW_CREATOR_SECONDARY_REWARD"));
+                reasons[1] = bytes4(keccak256("WOW_PLATFORM_REFERRER_SECONDARY_REWARD"));
+                reasons[2] = bytes4(keccak256("WOW_PROTOCOL_SECONDARY_REWARD"));
+
+                IProtocolRewards(protocolRewards).depositBatch{value: totalAmount}(recipients, amounts, reasons, "");
+            } else {
+                rewards.totalAmountToken = totalAmount;
+                rewards.creatorAmountToken = _calculateFee(totalAmount, TOKEN_CREATOR_SECONDARY_REWARDS_BPS);
+                rewards.platformReferrerAmountToken =
+                    _calculateFee(totalAmount, PLATFORM_REFERRER_SECONDARY_REWARDS_BPS);
+                rewards.protocolAmountToken =
+                    rewards.totalAmountToken - rewards.creatorAmountToken - rewards.platformReferrerAmountToken;
+
+                _transfer(address(this), tokenCreator, rewards.creatorAmountToken);
+                _transfer(address(this), platformReferrer, rewards.platformReferrerAmountToken);
+                _transfer(address(this), protocolFeeRecipient, rewards.protocolAmountToken);
+            }
+        }
+
+        return rewards;
     }
 
     /// @dev Calculates the fee for a given amount and basis points.
