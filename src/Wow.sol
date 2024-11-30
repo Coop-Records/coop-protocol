@@ -59,9 +59,9 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
     uint256 internal constant SECONDARY_MARKET_SUPPLY = 200_000_000e18; // 200M tokens
     uint256 public constant TOTAL_FEE_BPS = 100; // 1%
     uint256 public constant TOKEN_CREATOR_FEE_BPS = 5000; // 50% (of TOTAL_FEE_BPS)
-    uint256 public constant PROTOCOL_FEE_BPS = 2000; // 20% (of TOTAL_FEE_BPS)
-    uint256 public constant PLATFORM_REFERRER_FEE_BPS = 1500; // 15% (of TOTAL_FEE_BPS)
-    uint256 public constant ORDER_REFERRER_FEE_BPS = 1500; // 15% (of TOTAL_FEE_BPS)
+    uint256 public constant PROTOCOL_FEE_BPS = 2500; // 25% (of TOTAL_FEE_BPS)
+    uint256 public constant PLATFORM_REFERRER_FEE_BPS = 0; // 0% (of TOTAL_FEE_BPS)
+    uint256 public constant ORDER_REFERRER_FEE_BPS = 2500; // 25% (of TOTAL_FEE_BPS)
     uint256 public constant MIN_ORDER_SIZE = 0.0000001 ether;
     uint160 internal constant POOL_SQRT_PRICE_X96_WETH_0 = 400950665883918763141200546267337;
     uint160 internal constant POOL_SQRT_PRICE_X96_TOKEN_0 = 15655546353934715619853339;
