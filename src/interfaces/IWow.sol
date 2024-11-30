@@ -87,6 +87,21 @@ interface IWow {
         address marketAddress;
     }
 
+    /// @notice The secondary rewards accrued from the market's liquidity position
+    struct SecondaryRewards {
+        uint256 totalAmountEth;
+        uint256 totalAmountToken;
+        uint256 creatorAmountEth;
+        uint256 creatorAmountToken;
+        uint256 platformReferrerAmountEth;
+        uint256 platformReferrerAmountToken;
+        uint256 protocolAmountEth;
+        uint256 protocolAmountToken;
+    }
+
+    /// @notice Emitted when secondary rewards are distributed
+    event WowTokenSecondaryRewards(SecondaryRewards rewards);
+
     /// @notice Emitted when a Wow token is bought
     /// @param buyer The address of the buyer
     /// @param recipient The address of the recipient

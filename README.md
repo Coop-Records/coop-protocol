@@ -2,6 +2,12 @@
 
 The Wow Factory is a factory contract for creating Wow contracts.
 
+## Deployed Contracts (Base Sepolia)
+
+- Wow Implementation: `0x40da74AB965374Ff9a7E07CF88acBFc426Aeac93`
+- WowFactoryImpl: `0x7f8d3bf16df0ea2c6eb0d77c9303222313d694a8`
+- WowFactory: `0xfd80d1a5d08c2517de22373b28c4d2d619a921b0`
+
 ## Usage
 
 1. Deploy the CoopTimedSaleStrategyImpl contract using the following command:
