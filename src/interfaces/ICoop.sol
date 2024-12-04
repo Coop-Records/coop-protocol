@@ -155,22 +155,6 @@ interface ICoop {
         uint256 totalSupply
     );
 
-    /// @notice Emitted when the market graduates from primary to secondary
-    /// @param token The address of the token
-    /// @param pool The address of the pool
-    /// @param ethLiquidity The total ETH liquidity in the pool
-    /// @param tokenLiquidity The total token liquidity in the pool
-    /// @param positionId The ID of the liquidity position
-    /// @param marketType The type of market
-    event CoopMarketGraduated(
-        address indexed token,
-        address indexed pool,
-        uint256 ethLiquidity,
-        uint256 tokenLiquidity,
-        uint256 positionId,
-        MarketType marketType
-    );
-
     /// @notice Emitted when fees are distributed
     /// @param tokenCreator The address of the token creator
     /// @param platformReferrer The address of the platform referrer
@@ -189,6 +173,22 @@ interface ICoop {
         uint256 platformReferrerFee,
         uint256 orderReferrerFee,
         uint256 protocolFee
+    );
+
+    /// @notice Emitted when the market graduates from primary to secondary
+    /// @param token The address of the token
+    /// @param pool The address of the pool
+    /// @param ethLiquidity The total ETH liquidity in the pool
+    /// @param tokenLiquidity The total token liquidity in the pool
+    /// @param positionId The ID of the liquidity position
+    /// @param marketType The type of market
+    event CoopMarketGraduated(
+        address indexed token,
+        address indexed pool,
+        uint256 ethLiquidity,
+        uint256 tokenLiquidity,
+        uint256 positionId,
+        MarketType marketType
     );
 
     /// @notice Buys tokens from the bonding curve or Uniswap V3 pool depending on the market state.
