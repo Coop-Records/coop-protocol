@@ -143,11 +143,16 @@ interface ICoop {
     /// @param from The address of the sender
     /// @param to The address of the recipient
     /// @param amount The amount of tokens transferred
-    /// @param fromBalance The token balance of the sender after the transfer
-    /// @param toBalance The token balance of the recipient after the transfer
-    /// @param supply The total supply of tokens after the transfer
+    /// @param fromTokenBalance The token balance of the sender after the transfer
+    /// @param toTokenBalance The token balance of the recipient after the transfer
+    /// @param totalSupply The total supply of tokens after the transfer
     event CoopTokenTransfer(
-        address indexed from, address indexed to, uint256 amount, uint256 fromBalance, uint256 toBalance, uint256 supply
+        address indexed from,
+        address indexed to,
+        uint256 amount,
+        uint256 fromTokenBalance,
+        uint256 toTokenBalance,
+        uint256 totalSupply
     );
 
     /// @notice Emitted when the market graduates from primary to secondary
