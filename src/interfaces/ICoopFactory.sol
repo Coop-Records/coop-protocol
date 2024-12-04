@@ -63,17 +63,17 @@ interface ICoopFactory {
         address poolAddress
     );
 
-    /// @notice Creates a new Coop token
+    /// @notice Deploys a Coop ERC20 token
     /// @param _tokenCreator The address of the token creator
     /// @param _platformReferrer The address of the platform referrer
-    /// @param _tokenURI The URI of the token
-    /// @param _name The name of the token
-    /// @param _symbol The symbol of the token
+    /// @param _tokenURI The ERC20z token URI
+    /// @param _name The ERC20 token name
+    /// @param _symbol The ERC20 token symbol
     function deploy(
         address _tokenCreator,
         address _platformReferrer,
-        string calldata _tokenURI,
-        string calldata _name,
-        string calldata _symbol
+        string memory _tokenURI,
+        string memory _name,
+        string memory _symbol
     ) external payable returns (address);
 }
