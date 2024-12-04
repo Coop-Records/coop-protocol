@@ -65,9 +65,11 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
     uint256 public constant MIN_ORDER_SIZE = 0.0000001 ether;
     uint160 internal constant POOL_SQRT_PRICE_X96_WETH_0 = 400950665883918763141200546267337;
     uint160 internal constant POOL_SQRT_PRICE_X96_TOKEN_0 = 15655546353934715619853339;
-    uint24 internal constant LP_FEE = 500;
+    uint24 internal constant LP_FEE = 10000;
     int24 internal constant LP_TICK_LOWER = -887200;
     int24 internal constant LP_TICK_UPPER = 887200;
+    uint256 internal constant TOKEN_CREATOR_SECONDARY_REWARDS_BPS = 5000; // 50% (of LP_FEE)
+    uint256 internal constant PLATFORM_REFERRER_SECONDARY_REWARDS_BPS = 2500; // 25% (of LP_FEE)
 
     address public immutable WETH;
     address public immutable nonfungiblePositionManager;
@@ -81,6 +83,7 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
     address public poolAddress;
     address public tokenCreator;
     string public tokenURI;
+    uint256 public lpTokenId;
 
     constructor(
         address _protocolFeeRecipient,
@@ -177,12 +180,11 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
         // Ensure the recipient is not the zero address
         if (recipient == address(0)) revert AddressZero();
 
-        // Initialize variables to store the total cost, true order size, fee, refund, and whether the market should graduate
+        // Initialize variables to store the total cost, true order size, fee, and refund if applicable
         uint256 totalCost;
         uint256 trueOrderSize;
         uint256 fee;
         uint256 refund;
-        bool shouldGraduateMarket;
 
         if (marketType == MarketType.UNISWAP_POOL) {
             // Calculate the fee
@@ -211,9 +213,15 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
 
             // Execute the swap
             trueOrderSize = ISwapRouter(swapRouter).exactInputSingle(params);
+
+            // Handle any secondary rewards
+            _handleSecondaryRewards();
         }
 
         if (marketType == MarketType.BONDING_CURVE) {
+            // Used to determine if the market should graduate
+            bool shouldGraduateMarket;
+
             // Validate the order data
             (totalCost, trueOrderSize, fee, refund, shouldGraduateMarket) = _validateBondingCurveBuy(minOrderSize);
 
@@ -228,11 +236,11 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
                 (bool success,) = refundRecipient.call{value: refund}("");
                 if (!success) revert EthTransferFailed();
             }
-        }
 
-        // Start the market if this is the final bonding market buy order.
-        if (shouldGraduateMarket) {
-            _graduateMarket();
+            // Start the market if this is the final bonding market buy order.
+            if (shouldGraduateMarket) {
+                _graduateMarket();
+            }
         }
 
         emit CoopTokenBuy(
@@ -304,6 +312,11 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
         (bool success,) = recipient.call{value: payoutAfterFee}("");
         if (!success) revert EthTransferFailed();
 
+        // Handle any secondary rewards
+        if (marketType == MarketType.UNISWAP_POOL) {
+            _handleSecondaryRewards();
+        }
+
         emit CoopTokenSell(
             msg.sender,
             recipient,
@@ -327,6 +340,19 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
         if (marketType == MarketType.BONDING_CURVE) revert MarketNotGraduated();
 
         _burn(msg.sender, tokensToBurn);
+    }
+
+    /// @notice Force claim any accrued secondary rewards from the market's liquidity position.
+    /// @dev This function is a fallback, secondary rewards will be claimed automatically on each buy and sell.
+    /// @param pushEthRewards Whether to push the ETH directly to the recipients.
+    function claimSecondaryRewards(bool pushEthRewards) external {
+        SecondaryRewards memory rewards = _handleSecondaryRewards();
+
+        if (rewards.totalAmountEth > 0 && pushEthRewards) {
+            IProtocolRewards(protocolRewards).withdrawFor(tokenCreator, rewards.creatorAmountEth);
+            IProtocolRewards(protocolRewards).withdrawFor(platformReferrer, rewards.platformReferrerAmountEth);
+            IProtocolRewards(protocolRewards).withdrawFor(protocolFeeRecipient, rewards.protocolAmountEth);
+        }
     }
 
     /// @notice Returns current market type and address
@@ -573,17 +599,12 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
             deadline: block.timestamp
         });
 
-        // Mint the liquidity position to this contract. It will be non-transferable and fees will be non-claimable.
-        (uint256 positionId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
+        // Mint the liquidity position to this contract and store the token id.
+        (lpTokenId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
 
         emit CoopMarketGraduated(
-            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, positionId, marketType
+            address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, lpTokenId, marketType
         );
-    }
-
-    /// @dev Calculates the fee for a given amount and basis points.
-    function _calculateFee(uint256 amount, uint256 bps) internal pure returns (uint256) {
-        return (amount * bps) / 10_000;
     }
 
     /// @dev Handles calculating and depositing fees to an escrow protocol rewards contract
@@ -630,5 +651,83 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
             orderReferrerFee,
             protocolFee
         );
+    }
+
+    function _handleSecondaryRewards() internal returns (SecondaryRewards memory) {
+        if (marketType == MarketType.BONDING_CURVE) revert MarketNotGraduated();
+
+        INonfungiblePositionManager.CollectParams memory params = INonfungiblePositionManager.CollectParams({
+            tokenId: lpTokenId,
+            recipient: address(this),
+            amount0Max: type(uint128).max,
+            amount1Max: type(uint128).max
+        });
+
+        (uint256 totalAmountToken0, uint256 totalAmountToken1) =
+            INonfungiblePositionManager(nonfungiblePositionManager).collect(params);
+
+        address token0 = WETH < address(this) ? WETH : address(this);
+        address token1 = WETH < address(this) ? address(this) : WETH;
+
+        SecondaryRewards memory rewards;
+
+        rewards = _transferRewards(token0, totalAmountToken0, rewards);
+        rewards = _transferRewards(token1, totalAmountToken1, rewards);
+
+        emit CoopTokenSecondaryRewards(rewards);
+
+        return rewards;
+    }
+
+    function _transferRewards(address token, uint256 totalAmount, SecondaryRewards memory rewards)
+        internal
+        returns (SecondaryRewards memory)
+    {
+        if (totalAmount > 0) {
+            if (token == WETH) {
+                IWETH(WETH).withdraw(totalAmount);
+
+                rewards.totalAmountEth = totalAmount;
+                rewards.creatorAmountEth = _calculateFee(totalAmount, TOKEN_CREATOR_SECONDARY_REWARDS_BPS);
+                rewards.platformReferrerAmountEth = _calculateFee(totalAmount, PLATFORM_REFERRER_SECONDARY_REWARDS_BPS);
+                rewards.protocolAmountEth =
+                    rewards.totalAmountEth - rewards.creatorAmountEth - rewards.platformReferrerAmountEth;
+
+                address[] memory recipients = new address[](3);
+                recipients[0] = tokenCreator;
+                recipients[1] = platformReferrer;
+                recipients[2] = protocolFeeRecipient;
+
+                uint256[] memory amounts = new uint256[](3);
+                amounts[0] = rewards.creatorAmountEth;
+                amounts[1] = rewards.platformReferrerAmountEth;
+                amounts[2] = rewards.protocolAmountEth;
+
+                bytes4[] memory reasons = new bytes4[](3);
+                reasons[0] = bytes4(keccak256("COOP_CREATOR_SECONDARY_REWARD"));
+                reasons[1] = bytes4(keccak256("COOP_PLATFORM_REFERRER_SECONDARY_REWARD"));
+                reasons[2] = bytes4(keccak256("COOP_PROTOCOL_SECONDARY_REWARD"));
+
+                IProtocolRewards(protocolRewards).depositBatch{value: totalAmount}(recipients, amounts, reasons, "");
+            } else {
+                rewards.totalAmountToken = totalAmount;
+                rewards.creatorAmountToken = _calculateFee(totalAmount, TOKEN_CREATOR_SECONDARY_REWARDS_BPS);
+                rewards.platformReferrerAmountToken =
+                    _calculateFee(totalAmount, PLATFORM_REFERRER_SECONDARY_REWARDS_BPS);
+                rewards.protocolAmountToken =
+                    rewards.totalAmountToken - rewards.creatorAmountToken - rewards.platformReferrerAmountToken;
+
+                _transfer(address(this), tokenCreator, rewards.creatorAmountToken);
+                _transfer(address(this), platformReferrer, rewards.platformReferrerAmountToken);
+                _transfer(address(this), protocolFeeRecipient, rewards.protocolAmountToken);
+            }
+        }
+
+        return rewards;
+    }
+
+    /// @dev Calculates the fee for a given amount and basis points.
+    function _calculateFee(uint256 amount, uint256 bps) internal pure returns (uint256) {
+        return (amount * bps) / 10_000;
     }
 }

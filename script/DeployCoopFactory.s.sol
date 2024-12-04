@@ -57,12 +57,12 @@ contract DeployCoopFactory is Script {
         address swapRouter = 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4; // Base Sepolia Swap Router
 
         // Deploy implementation contracts
-        Coop wowImpl = new Coop(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter);
+        Coop impl = new Coop(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter);
 
         address bondingCurve = 0x31eb0D332F0C13836CCEC763989915d0195AE494;
 
         // Deploy factory implementation
-        CoopFactoryImpl factoryImpl = new CoopFactoryImpl(address(wowImpl), bondingCurve);
+        CoopFactoryImpl factoryImpl = new CoopFactoryImpl(address(impl), bondingCurve);
 
         // Initialize implementation
         bytes memory initData = abi.encodeWithSelector(

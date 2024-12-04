@@ -10,6 +10,12 @@ The Coop Factory is a factory contract for creating Coop contracts.
 - CoopFactoryImpl: `0x68068f759a262212adf1df16ab536043ec95ace9`
 - CoopFactory Proxy: `0xa6265db7f16868c8d911dd5db51bd0924db0362e`
 
+## Deployed Contracts (Base Sepolia)
+
+- Wow Implementation: `0xbf0f3d5a13d193e79f5c4154dbe4b4738797aa45`
+- WowFactoryImpl: `0x4d8963a851533abeef38425468fec7fe1a53a169`
+- WowFactory: `0x490f4945061b43dd0e38ee503a077d0bffd94737`
+
 ## Usage
 
 1. Deploy the Coop implementation contract using the following command:

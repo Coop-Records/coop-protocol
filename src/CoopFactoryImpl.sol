@@ -56,7 +56,7 @@ contract CoopFactoryImpl is ICoopFactory, UUPSUpgradeable, ReentrancyGuardUpgrad
         bondingCurve = _bondingCurve;
     }
 
-    /// @notice Creates a Wow token with bonding curve mechanics that graduates to Uniswap V3
+    /// @notice Creates a Coop token with bonding curve mechanics that graduates to Uniswap V3
     /// @param _tokenCreator The address of the token creator
     /// @param _platformReferrer The address of the platform referrer
     /// @param _tokenURI The ERC20z token URI
