@@ -621,7 +621,14 @@ contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradea
         IProtocolRewards(protocolRewards).depositBatch{value: totalFee}(recipients, amounts, reasons, "");
 
         emit CoopTokenFees(
-            tokenCreator, platformReferrer, protocolFee, tokenCreatorFee, orderReferrerFee, platformReferrerFee
+            tokenCreator,
+            platformReferrer,
+            _orderReferrer,
+            protocolFeeRecipient,
+            tokenCreatorFee,
+            platformReferrerFee,
+            orderReferrerFee,
+            protocolFee
         );
     }
 }

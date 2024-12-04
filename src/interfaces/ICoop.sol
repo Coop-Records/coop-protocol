@@ -136,10 +136,12 @@ interface ICoop {
     event CoopTokenFees(
         address indexed tokenCreator,
         address indexed platformReferrer,
-        uint256 protocolEthFee,
-        uint256 subjectEthFee,
-        uint256 referralEthFee,
-        uint256 holderEthFee
+        address indexed _orderReferrer,
+        address protocolFeeRecipient,
+        uint256 tokenCreatorFee,
+        uint256 platformReferrerFee,
+        uint256 orderReferrerFee,
+        uint256 protocolFee
     );
 
     /// @notice Buys tokens from the bonding curve or Uniswap V3 pool depending on the market state.
