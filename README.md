@@ -1,18 +1,18 @@
-# Wow Factory
+# Coop Factory
 
-The Wow Factory is a factory contract for creating Wow contracts.
+The Coop Factory is a factory contract for creating Coop contracts.
 
 ## Usage
 
-1. Deploy the CoopTimedSaleStrategyImpl contract using the following command:
+1. Deploy the Coop implementation contract using the following command:
 
    ```
-   forge script script/DeployWowFactory.s.sol:DeployWowFactory --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv
+   forge script script/DeployCoopFactory.s.sol:DeployCoopFactory --rpc-url $RPC_URL --private-key $PRIVATE_KEY --broadcast --verify --etherscan-api-key $ETHERSCAN_API_KEY -vvvv
    ```
 
    Replace `RPC_URL`, `PRIVATE_KEY`, and `ETHERSCAN_API_KEY` with your actual values.
 
-2. Deploy the CoopTimedSaleStrategy contract, passing the address of the CoopTimedSaleStrategyImpl as the `_logic` parameter.
+2. Deploy the Coop contract, passing the address of the CoopFactoryImpl as the `_logic` parameter.
 3. For each 1155 token sale, call `setSaleV2()` with the appropriate parameters.
 4. Users can mint tokens using the `mint()` function during the sale period.
 5. After the sale ends and meets conditions, call `launchMarket()` to enable secondary trading.
@@ -27,7 +27,7 @@ For detailed information on function parameters and usage, please refer to the c
 
 ## Contract Structure
 
-- `WowFactory.sol`: The main implementation contract containing all the logic for the Wow factory.
-- `Wow.sol`: A proxy contract that delegates calls to the implementation contract, allowing for upgrades.
+- `CoopFactory.sol`: The main implementation contract containing all the logic for the Coop factory.
+- `Coop.sol`: A proxy contract that delegates calls to the implementation contract, allowing for upgrades.
 
 For more details on implementation, please refer to the contract source code and comments.
