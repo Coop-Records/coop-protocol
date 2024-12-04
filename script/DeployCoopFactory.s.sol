@@ -4,8 +4,6 @@ pragma solidity ^0.8.23;
 import "forge-std/Script.sol";
 import {CoopFactoryImpl} from "../src/CoopFactoryImpl.sol";
 import {CoopFactory} from "../src/CoopFactory.sol";
-import {TransparentUpgradeableProxy} from "@openzeppelin/contracts/proxy/transparent/TransparentUpgradeableProxy.sol";
-import {ProxyAdmin} from "@openzeppelin/contracts/proxy/transparent/ProxyAdmin.sol";
 import {Coop} from "../src/Coop.sol";
 
 /*
@@ -66,18 +64,11 @@ contract DeployCoopFactory is Script {
         // Deploy factory implementation
         CoopFactoryImpl factoryImpl = new CoopFactoryImpl(address(wowImpl), bondingCurve);
 
-        // Deploy proxy admin
-        ProxyAdmin proxyAdmin = new ProxyAdmin(COOP_RECS);
-
         // Initialize implementation
         bytes memory initData = abi.encodeWithSelector(
             CoopFactoryImpl.initialize.selector,
             COOP_RECS // defaultOwner
         );
-
-        // Deploy factory proxy
-        TransparentUpgradeableProxy factoryProxy =
-            new TransparentUpgradeableProxy(address(factoryImpl), address(proxyAdmin), initData);
 
         // Deploy factory
         new CoopFactory(address(factoryImpl), initData);
