@@ -175,19 +175,19 @@ interface ICoop {
         uint256 protocolFee
     );
 
-    /// @notice Emitted when the market graduates from primary to secondary
-    /// @param token The address of the token
-    /// @param pool The address of the pool
-    /// @param ethLiquidity The total ETH liquidity in the pool
-    /// @param tokenLiquidity The total token liquidity in the pool
-    /// @param positionId The ID of the liquidity position
+    /// @notice Emitted when a market graduates
+    /// @param tokenAddress The address of the token
+    /// @param poolAddress The address of the pool
+    /// @param totalEthLiquidity The total ETH liquidity in the pool
+    /// @param totalTokenLiquidity The total token liquidity in the pool
+    /// @param lpPositionId The ID of the liquidity position
     /// @param marketType The type of market
     event CoopMarketGraduated(
-        address indexed token,
-        address indexed pool,
-        uint256 ethLiquidity,
-        uint256 tokenLiquidity,
-        uint256 positionId,
+        address indexed tokenAddress,
+        address indexed poolAddress,
+        uint256 totalEthLiquidity,
+        uint256 totalTokenLiquidity,
+        uint256 lpPositionId,
         MarketType marketType
     );
 
