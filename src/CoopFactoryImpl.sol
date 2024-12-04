@@ -83,7 +83,9 @@ contract CoopFactoryImpl is ICoopFactory, UUPSUpgradeable, ReentrancyGuardUpgrad
             bondingCurve,
             _tokenURI,
             _name,
-            _symbol
+            _symbol,
+            address(token),
+            token.poolAddress()
         );
 
         return address(token);

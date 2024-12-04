@@ -48,7 +48,9 @@ interface ICoopFactory {
         address bondingCurve,
         string tokenURI,
         string name,
-        string symbol
+        string symbol,
+        address tokenAddress,
+        address poolAddress
     );
 
     /// @notice Creates a new Coop token
