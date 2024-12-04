@@ -12,4 +12,6 @@ interface IProtocolRewards {
         bytes4[] calldata reasons,
         string calldata comment
     ) external payable;
+
+    function withdrawFor(address to, uint256 amount) external;
 }
