@@ -38,7 +38,7 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
-interface IWow {
+interface ICoop {
     /// @notice Thrown when an operation is attempted with a zero address
     error AddressZero();
 
@@ -87,7 +87,7 @@ interface IWow {
         address marketAddress;
     }
 
-    /// @notice Emitted when a Wow token is bought
+    /// @notice Emitted when a Coop token is bought
     /// @param buyer The address of the buyer
     /// @param recipient The address of the recipient
     /// @param orderReferrer The address of the order referrer
@@ -99,7 +99,7 @@ interface IWow {
     /// @param comment A comment associated with the transaction
     /// @param totalSupply The total supply of tokens after the buy
     /// @param marketType The type of market
-    event WowTokenBuy(
+    event CoopTokenBuy(
         address indexed buyer,
         address indexed recipient,
         address indexed orderReferrer,
@@ -113,7 +113,7 @@ interface IWow {
         MarketType marketType
     );
 
-    /// @notice Emitted when a Wow token is sold
+    /// @notice Emitted when a Coop token is sold
     /// @param seller The address of the seller
     /// @param recipient The address of the recipient
     /// @param orderReferrer The address of the order referrer
@@ -125,7 +125,7 @@ interface IWow {
     /// @param comment A comment associated with the transaction
     /// @param totalSupply The total supply of tokens after the sell
     /// @param marketType The type of market
-    event WowTokenSell(
+    event CoopTokenSell(
         address indexed seller,
         address indexed recipient,
         address indexed orderReferrer,
@@ -139,14 +139,14 @@ interface IWow {
         MarketType marketType
     );
 
-    /// @notice Emitted when Wow tokens are transferred
+    /// @notice Emitted when Coop tokens are transferred
     /// @param from The address of the sender
     /// @param to The address of the recipient
     /// @param amount The amount of tokens transferred
     /// @param fromTokenBalance The token balance of the sender after the transfer
     /// @param toTokenBalance The token balance of the recipient after the transfer
     /// @param totalSupply The total supply of tokens after the transfer
-    event WowTokenTransfer(
+    event CoopTokenTransfer(
         address indexed from,
         address indexed to,
         uint256 amount,
@@ -164,7 +164,7 @@ interface IWow {
     /// @param platformReferrerFee The fee for the platform referrer
     /// @param orderReferrerFee The fee for the order referrer
     /// @param protocolFee The protocol fee
-    event WowTokenFees(
+    event CoopTokenFees(
         address indexed tokenCreator,
         address indexed platformReferrer,
         address indexed orderReferrer,
@@ -182,7 +182,7 @@ interface IWow {
     /// @param totalTokenLiquidity The total token liquidity in the pool
     /// @param lpPositionId The ID of the liquidity position
     /// @param marketType The type of market
-    event WowMarketGraduated(
+    event CoopMarketGraduated(
         address indexed tokenAddress,
         address indexed poolAddress,
         uint256 totalEthLiquidity,
@@ -228,7 +228,7 @@ interface IWow {
     ) external returns (uint256);
 
     /// @notice Allows a holder to burn their tokens after the market has graduated
-    /// @dev Emits a WowTokenTransfer event with the updated token balances and total supply
+    /// @dev Emits a CoopTokenTransfer event with the updated token balances and total supply
     /// @param tokensToBurn The number of tokens to burn
     function burn(uint256 tokensToBurn) external;
 

@@ -1,15 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {Clones} from "@openzeppelin/contracts/proxy/Clones.sol";
-import {OwnableUpgradeable} from "@openzeppelin/contracts-upgradeable/access/OwnableUpgradeable.sol";
-import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/utils/ReentrancyGuardUpgradeable.sol";
-import {UUPSUpgradeable} from "@openzeppelin/contracts-upgradeable/proxy/utils/UUPSUpgradeable.sol";
-import {ERC1967Utils} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Utils.sol";
-
-import {IWowFactory} from "./interfaces/IWowFactory.sol";
-import {Wow} from "./Wow.sol";
-
 /*
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
@@ -47,16 +38,32 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
-contract WowFactoryImpl is IWowFactory, UUPSUpgradeable, ReentrancyGuardUpgradeable, OwnableUpgradeable {
-    address public immutable tokenImplementation;
-    address public immutable bondingCurve;
+interface ICoopFactory {
+    /// @notice Emitted when a new Coop token is created
+    /// @param factoryAddress The address of the factory that created the token
+    /// @param tokenCreator The address of the creator of the token
+    /// @param platformReferrer The address of the platform referrer
+    /// @param protocolFeeRecipient The address of the protocol fee recipient
+    /// @param bondingCurve The address of the bonding curve
+    /// @param tokenURI The URI of the token
+    /// @param name The name of the token
+    /// @param symbol The symbol of the token
+    /// @param tokenAddress The address of the token
+    /// @param poolAddress The address of the pool
+    event CoopTokenCreated(
+        address indexed factoryAddress,
+        address indexed tokenCreator,
+        address platformReferrer,
+        address protocolFeeRecipient,
+        address bondingCurve,
+        string tokenURI,
+        string name,
+        string symbol,
+        address tokenAddress,
+        address poolAddress
+    );
 
-    constructor(address _tokenImplementation, address _bondingCurve) initializer {
-        tokenImplementation = _tokenImplementation;
-        bondingCurve = _bondingCurve;
-    }
-
-    /// @notice Creates a Wow token with bonding curve mechanics that graduates to Uniswap V3
+    /// @notice Deploys a Coop ERC20 token
     /// @param _tokenCreator The address of the token creator
     /// @param _platformReferrer The address of the platform referrer
     /// @param _tokenURI The ERC20z token URI
@@ -68,61 +75,5 @@ contract WowFactoryImpl is IWowFactory, UUPSUpgradeable, ReentrancyGuardUpgradea
         string memory _tokenURI,
         string memory _name,
         string memory _symbol
-    ) external payable nonReentrant returns (address) {
-        bytes32 salt = _generateSalt(_tokenCreator, _tokenURI);
-
-        Wow token = Wow(payable(Clones.cloneDeterministic(tokenImplementation, salt)));
-
-        token.initialize{value: msg.value}(_tokenCreator, _platformReferrer, bondingCurve, _tokenURI, _name, _symbol);
-
-        emit WowTokenCreated(
-            address(this),
-            _tokenCreator,
-            _platformReferrer,
-            token.protocolFeeRecipient(),
-            bondingCurve,
-            _tokenURI,
-            _name,
-            _symbol,
-            address(token),
-            token.poolAddress()
-        );
-
-        return address(token);
-    }
-
-    /// @dev Generates a unique salt for deterministic deployment
-    function _generateSalt(address _tokenCreator, string memory _tokenURI) internal view returns (bytes32) {
-        return keccak256(
-            abi.encodePacked(
-                msg.sender,
-                _tokenCreator,
-                keccak256(abi.encodePacked(_tokenURI)),
-                block.coinbase,
-                block.number,
-                block.prevrandao,
-                block.timestamp,
-                tx.gasprice,
-                tx.origin
-            )
-        );
-    }
-
-    /// @notice Initializes the factory proxy contract
-    /// @param _owner Address of the contract owner
-    /// @dev Can only be called once due to initializer modifier
-    function initialize(address _owner) external initializer {
-        __UUPSUpgradeable_init();
-        __ReentrancyGuard_init();
-        __Ownable_init(_owner);
-    }
-
-    /// @notice The implementation address of the factory contract
-    function implementation() external view returns (address) {
-        return ERC1967Utils.getImplementation();
-    }
-
-    /// @dev Authorizes an upgrade to a new implementation
-    /// @param _newImpl The new implementation address
-    function _authorizeUpgrade(address _newImpl) internal override onlyOwner {}
+    ) external payable returns (address);
 }

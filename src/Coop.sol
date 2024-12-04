@@ -8,7 +8,7 @@ import {ReentrancyGuardUpgradeable} from "@openzeppelin/contracts-upgradeable/ut
 import {IERC20} from "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 import {SafeERC20} from "@openzeppelin/contracts/token/ERC20/utils/SafeERC20.sol";
 
-import {IWow} from "./interfaces/IWow.sol";
+import {ICoop} from "./interfaces/ICoop.sol";
 import {INonfungiblePositionManager} from "./interfaces/INonfungiblePositionManager.sol";
 import {IUniswapV3Pool} from "./interfaces/IUniswapV3Pool.sol";
 import {ISwapRouter} from "./interfaces/ISwapRouter.sol";
@@ -53,7 +53,7 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
-contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeable, IERC721Receiver {
+contract Coop is ICoop, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeable, IERC721Receiver {
     uint256 public constant MAX_TOTAL_SUPPLY = 1_000_000_000e18; // 1B tokens
     uint256 internal constant PRIMARY_MARKET_SUPPLY = 800_000_000e18; // 800M tokens
     uint256 internal constant SECONDARY_MARKET_SUPPLY = 200_000_000e18; // 200M tokens
@@ -102,7 +102,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         swapRouter = _swapRouter;
     }
 
-    /// @notice Initializes a new Wow token
+    /// @notice Initializes a new Coop token
     /// @param _tokenCreator The address of the token creator
     /// @param _platformReferrer The address of the platform referrer
     /// @param _bondingCurve The address of the bonding curve module
@@ -235,7 +235,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             _graduateMarket();
         }
 
-        emit WowTokenBuy(
+        emit CoopTokenBuy(
             msg.sender,
             recipient,
             orderReferrer,
@@ -304,7 +304,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         (bool success,) = recipient.call{value: payoutAfterFee}("");
         if (!success) revert EthTransferFailed();
 
-        emit WowTokenSell(
+        emit CoopTokenSell(
             msg.sender,
             recipient,
             orderReferrer,
@@ -415,7 +415,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
     /// @dev Overrides ERC20's _update function to
     ///      - Prevent transfers to the pool if the market has not graduated.
-    ///      - Emit the superset `WowTokenTransfer` event with each ERC20 transfer.
+    ///      - Emit the superset `CoopTokenTransfer` event with each ERC20 transfer.
     function _update(address from, address to, uint256 value) internal virtual override {
         if (marketType == MarketType.BONDING_CURVE && to == poolAddress) {
             revert MarketNotGraduated();
@@ -423,7 +423,7 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
         super._update(from, to, value);
 
-        emit WowTokenTransfer(from, to, value, balanceOf(from), balanceOf(to), totalSupply());
+        emit CoopTokenTransfer(from, to, value, balanceOf(from), balanceOf(to), totalSupply());
     }
 
     /// @dev Validates a bonding curve buy order and if necessary, recalculates the order data if the size is greater than the remaining supply
@@ -576,9 +576,14 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
         // Mint the liquidity position to this contract. It will be non-transferable and fees will be non-claimable.
         (uint256 positionId,,,) = INonfungiblePositionManager(nonfungiblePositionManager).mint(params);
 
-        emit WowMarketGraduated(
+        emit CoopMarketGraduated(
             address(this), poolAddress, ethLiquidity, SECONDARY_MARKET_SUPPLY, positionId, marketType
         );
+    }
+
+    /// @dev Calculates the fee for a given amount and basis points.
+    function _calculateFee(uint256 amount, uint256 bps) internal pure returns (uint256) {
+        return (amount * bps) / 10_000;
     }
 
     /// @dev Handles calculating and depositing fees to an escrow protocol rewards contract
@@ -599,23 +604,23 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
 
         recipients[0] = tokenCreator;
         amounts[0] = tokenCreatorFee;
-        reasons[0] = bytes4(keccak256("WOW_CREATOR_FEE"));
+        reasons[0] = bytes4(keccak256("COOP_CREATOR_FEE"));
 
         recipients[1] = platformReferrer;
         amounts[1] = platformReferrerFee;
-        reasons[1] = bytes4(keccak256("WOW_PLATFORM_REFERRER_FEE"));
+        reasons[1] = bytes4(keccak256("COOP_PLATFORM_REFERRER_FEE"));
 
         recipients[2] = _orderReferrer;
         amounts[2] = orderReferrerFee;
-        reasons[2] = bytes4(keccak256("WOW_ORDER_REFERRER_FEE"));
+        reasons[2] = bytes4(keccak256("COOP_ORDER_REFERRER_FEE"));
 
         recipients[3] = protocolFeeRecipient;
         amounts[3] = protocolFee;
-        reasons[3] = bytes4(keccak256("WOW_PROTOCOL_FEE"));
+        reasons[3] = bytes4(keccak256("COOP_PROTOCOL_FEE"));
 
         IProtocolRewards(protocolRewards).depositBatch{value: totalFee}(recipients, amounts, reasons, "");
 
-        emit WowTokenFees(
+        emit CoopTokenFees(
             tokenCreator,
             platformReferrer,
             _orderReferrer,
@@ -625,10 +630,5 @@ contract Wow is IWow, Initializable, ERC20Upgradeable, ReentrancyGuardUpgradeabl
             orderReferrerFee,
             protocolFee
         );
-    }
-
-    /// @dev Calculates the fee for a given amount and basis points.
-    function _calculateFee(uint256 amount, uint256 bps) internal pure returns (uint256) {
-        return (amount * bps) / 10_000;
     }
 }
