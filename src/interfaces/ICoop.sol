@@ -119,12 +119,7 @@ interface ICoop {
 
     /// @notice Emitted when a token transfer occurs
     event CoopTokenTransfer(
-        address indexed from,
-        address indexed to,
-        uint256 amount,
-        uint256 fromBalance,
-        uint256 toBalance,
-        uint256 supply
+        address indexed from, address indexed to, uint256 amount, uint256 fromBalance, uint256 toBalance, uint256 supply
     );
 
     /// @notice Emitted when the market graduates from primary to secondary

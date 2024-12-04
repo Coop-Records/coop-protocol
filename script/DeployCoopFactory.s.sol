@@ -59,21 +59,12 @@ contract DeployCoopFactory is Script {
         address swapRouter = 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4; // Base Sepolia Swap Router
 
         // Deploy implementation contracts
-        Coop wowImpl = new Coop(
-            protocolFeeRecipient,
-            protocolRewards,
-            weth,
-            nonfungiblePositionManager,
-            swapRouter
-        );
+        Coop wowImpl = new Coop(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter);
 
         address bondingCurve = 0x31eb0D332F0C13836CCEC763989915d0195AE494;
 
         // Deploy factory implementation
-        CoopFactoryImpl factoryImpl = new CoopFactoryImpl(
-            address(wowImpl),
-            bondingCurve
-        );
+        CoopFactoryImpl factoryImpl = new CoopFactoryImpl(address(wowImpl), bondingCurve);
 
         // Deploy proxy admin
         ProxyAdmin proxyAdmin = new ProxyAdmin(COOP_RECS);
@@ -85,11 +76,8 @@ contract DeployCoopFactory is Script {
         );
 
         // Deploy factory proxy
-        TransparentUpgradeableProxy factoryProxy = new TransparentUpgradeableProxy(
-                address(factoryImpl),
-                address(proxyAdmin),
-                initData
-            );
+        TransparentUpgradeableProxy factoryProxy =
+            new TransparentUpgradeableProxy(address(factoryImpl), address(proxyAdmin), initData);
 
         // Deploy factory
         new CoopFactory(address(factoryImpl), initData);

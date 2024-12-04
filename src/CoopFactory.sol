@@ -41,8 +41,5 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
 contract CoopFactory is ERC1967Proxy {
-    constructor(
-        address _logic,
-        bytes memory _data
-    ) ERC1967Proxy(_logic, _data) {}
+    constructor(address _logic, bytes memory _data) ERC1967Proxy(_logic, _data) {}
 }
