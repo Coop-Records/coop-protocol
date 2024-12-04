@@ -31,6 +31,6 @@ For detailed information on function parameters and usage, please refer to the c
 ## Contract Structure
 
 - `CoopFactory.sol`: The main implementation contract containing all the logic for the Coop factory.
-- `Coop.sol`: A proxy contract that delegates calls to the implementation contract, allowing for upgrades.
+- `Coop.sol`: The main implementation contract containing all the logic for the Coop token implementation.
 
 For more details on implementation, please refer to the contract source code and comments.
