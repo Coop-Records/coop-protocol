@@ -158,7 +158,7 @@ interface ICoop {
     /// @notice Emitted when fees are distributed
     /// @param tokenCreator The address of the token creator
     /// @param platformReferrer The address of the platform referrer
-    /// @param _orderReferrer The address of the order referrer
+    /// @param orderReferrer The address of the order referrer
     /// @param protocolFeeRecipient The address of the protocol fee recipient
     /// @param tokenCreatorFee The fee for the token creator
     /// @param platformReferrerFee The fee for the platform referrer
@@ -167,7 +167,7 @@ interface ICoop {
     event CoopTokenFees(
         address indexed tokenCreator,
         address indexed platformReferrer,
-        address indexed _orderReferrer,
+        address indexed orderReferrer,
         address protocolFeeRecipient,
         uint256 tokenCreatorFee,
         uint256 platformReferrerFee,
