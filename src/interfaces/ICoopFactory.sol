@@ -40,10 +40,20 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
 interface ICoopFactory {
     /// @notice Emitted when a new Coop token is created
+    /// @param factoryAddress The address of the factory that created the token
+    /// @param tokenCreator The address of the creator of the token
+    /// @param platformReferrer The address of the platform referrer
+    /// @param protocolFeeRecipient The address of the protocol fee recipient
+    /// @param bondingCurve The address of the bonding curve
+    /// @param tokenURI The URI of the token
+    /// @param name The name of the token
+    /// @param symbol The symbol of the token
+    /// @param tokenAddress The address of the token
+    /// @param poolAddress The address of the pool
     event CoopTokenCreated(
         address indexed factoryAddress,
         address indexed tokenCreator,
-        address indexed platformReferrer,
+        address platformReferrer,
         address protocolFeeRecipient,
         address bondingCurve,
         string tokenURI,
