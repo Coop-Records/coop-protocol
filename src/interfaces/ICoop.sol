@@ -87,7 +87,18 @@ interface ICoop {
         address marketAddress;
     }
 
-    /// @notice Emitted when a token buy occurs
+    /// @notice Emitted when a Coop token is bought
+    /// @param buyer The address of the buyer
+    /// @param recipient The address of the recipient
+    /// @param orderReferrer The address of the order referrer
+    /// @param totalEth The total ETH involved in the transaction
+    /// @param ethFee The ETH fee for the transaction
+    /// @param ethSold The amount of ETH sold
+    /// @param tokensBought The number of tokens bought
+    /// @param buyerTokenBalance The token balance of the buyer after the transaction
+    /// @param comment A comment associated with the transaction
+    /// @param totalSupply The total supply of tokens after the buy
+    /// @param marketType The type of market
     event CoopTokenBuy(
         address indexed buyer,
         address indexed recipient,
@@ -102,7 +113,18 @@ interface ICoop {
         MarketType marketType
     );
 
-    /// @notice Emitted when a token sell occurs
+    /// @notice Emitted when a Coop token is sold
+    /// @param seller The address of the seller
+    /// @param recipient The address of the recipient
+    /// @param orderReferrer The address of the order referrer
+    /// @param totalEth The total ETH involved in the transaction
+    /// @param ethFee The ETH fee for the transaction
+    /// @param ethBought The amount of ETH bought
+    /// @param tokensSold The number of tokens sold
+    /// @param sellerTokenBalance The token balance of the seller after the transaction
+    /// @param comment A comment associated with the transaction
+    /// @param totalSupply The total supply of tokens after the sell
+    /// @param marketType The type of market
     event CoopTokenSell(
         address indexed seller,
         address indexed recipient,
@@ -117,12 +139,24 @@ interface ICoop {
         MarketType marketType
     );
 
-    /// @notice Emitted when a token transfer occurs
+    /// @notice Emitted when Coop tokens are transferred
+    /// @param from The address of the sender
+    /// @param to The address of the recipient
+    /// @param amount The amount of tokens transferred
+    /// @param fromBalance The token balance of the sender after the transfer
+    /// @param toBalance The token balance of the recipient after the transfer
+    /// @param supply The total supply of tokens after the transfer
     event CoopTokenTransfer(
         address indexed from, address indexed to, uint256 amount, uint256 fromBalance, uint256 toBalance, uint256 supply
     );
 
     /// @notice Emitted when the market graduates from primary to secondary
+    /// @param token The address of the token
+    /// @param pool The address of the pool
+    /// @param ethLiquidity The total ETH liquidity in the pool
+    /// @param tokenLiquidity The total token liquidity in the pool
+    /// @param positionId The ID of the liquidity position
+    /// @param marketType The type of market
     event CoopMarketGraduated(
         address indexed token,
         address indexed pool,
@@ -133,6 +167,14 @@ interface ICoop {
     );
 
     /// @notice Emitted when fees are distributed
+    /// @param tokenCreator The address of the token creator
+    /// @param platformReferrer The address of the platform referrer
+    /// @param _orderReferrer The address of the order referrer
+    /// @param protocolFeeRecipient The address of the protocol fee recipient
+    /// @param tokenCreatorFee The fee for the token creator
+    /// @param platformReferrerFee The fee for the platform referrer
+    /// @param orderReferrerFee The fee for the order referrer
+    /// @param protocolFee The protocol fee
     event CoopTokenFees(
         address indexed tokenCreator,
         address indexed platformReferrer,
