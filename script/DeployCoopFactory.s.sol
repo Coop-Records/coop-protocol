@@ -1,7 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.23;
 
-import {ERC1967Proxy} from "@openzeppelin/contracts/proxy/ERC1967/ERC1967Proxy.sol";
+import "forge-std/Script.sol";
+import {CoopFactoryImpl} from "../src/CoopFactoryImpl.sol";
+import {CoopFactory} from "../src/CoopFactory.sol";
+import {Coop} from "../src/Coop.sol";
 
 /*
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
@@ -40,6 +43,36 @@ MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 MMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMMM
 */
-contract WowFactory is ERC1967Proxy {
-    constructor(address _logic, bytes memory _data) ERC1967Proxy(_logic, _data) {}
+contract DeployCoopFactory is Script {
+    function run() public {
+        vm.startBroadcast();
+
+        address COOP_RECS = 0x512b55b00d744fC2eDB8474f223a7498c3e5a7ce; // CoopRecs.base.eth
+
+        // Constructor addresses
+        address protocolFeeRecipient = COOP_RECS;
+        address protocolRewards = 0x7777777F279eba3d3Ad8F4E708545291A6fDBA8B; // Base Sepolia ProtocolRewards
+        address weth = 0x4200000000000000000000000000000000000006; // Base Sepolia WETH
+        address nonfungiblePositionManager = 0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2; // Base Sepolia NonfungiblePositionManager
+        address swapRouter = 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4; // Base Sepolia Swap Router
+
+        // Deploy implementation contracts
+        Coop impl = new Coop(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter);
+
+        address bondingCurve = 0x31eb0D332F0C13836CCEC763989915d0195AE494;
+
+        // Deploy factory implementation
+        CoopFactoryImpl factoryImpl = new CoopFactoryImpl(address(impl), bondingCurve);
+
+        // Initialize implementation
+        bytes memory initData = abi.encodeWithSelector(
+            CoopFactoryImpl.initialize.selector,
+            COOP_RECS // defaultOwner
+        );
+
+        // Deploy factory
+        new CoopFactory(address(factoryImpl), initData);
+
+        vm.stopBroadcast();
+    }
 }
