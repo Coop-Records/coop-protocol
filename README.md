@@ -2,6 +2,14 @@
 
 The Coop Factory is a factory contract for creating Coop contracts.
 
+## Deployments
+
+### Base Sepolia
+
+- Coop Implementation: `0x601144c73826edf12b02f8683d70626819d3dbaf`
+- CoopFactoryImpl: `0x68068f759a262212adf1df16ab536043ec95ace9`
+- CoopFactory Proxy: `0xa6265db7f16868c8d911dd5db51bd0924db0362e`
+
 ## Usage
 
 1. Deploy the Coop implementation contract using the following command:
