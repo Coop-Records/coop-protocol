@@ -47,7 +47,7 @@ contract DeployCoopFactory is Script {
     function run() public {
         vm.startBroadcast();
 
-        address COOP_RECS = 0x512b55b00d744fC2eDB8474f223a7498c3e5a7ce; // CoopRecs.base.eth
+        address COOP_RECS = 0xB77c7A445bd47591100F03a0C890d61eF64e4d6f; // CoopRecs multisig wallet
 
         // Constructor addresses
         address protocolFeeRecipient = COOP_RECS;
