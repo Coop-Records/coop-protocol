@@ -53,13 +53,13 @@ contract DeployCoopFactory is Script {
         address protocolFeeRecipient = COOP_RECS;
         address protocolRewards = 0x7777777F279eba3d3Ad8F4E708545291A6fDBA8B; // Base Sepolia ProtocolRewards
         address weth = 0x4200000000000000000000000000000000000006; // Base Sepolia WETH
-        address nonfungiblePositionManager = 0x27F971cb582BF9E50F397e4d29a5C7A34f11faA2; // Base Sepolia NonfungiblePositionManager
-        address swapRouter = 0x94cC0AaC535CCDB3C01d6787D6413C739ae12bc4; // Base Sepolia Swap Router
+        address nonfungiblePositionManager = 0x03a520b32C04BF3bEEf7BEb72E919cf822Ed34f1; // Base Sepolia NonfungiblePositionManager
+        address swapRouter = 0x2626664c2603336E57B271c5C0b26F421741e481; // Base Sepolia Swap Router
 
         // Deploy implementation contracts
         Coop impl = new Coop(protocolFeeRecipient, protocolRewards, weth, nonfungiblePositionManager, swapRouter);
 
-        address bondingCurve = 0x31eb0D332F0C13836CCEC763989915d0195AE494;
+        address bondingCurve = 0x91C1863eD54809c45b53bb6090eb437036c792C4;
 
         // Deploy factory implementation
         CoopFactoryImpl factoryImpl = new CoopFactoryImpl(address(impl), bondingCurve);
