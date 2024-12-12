@@ -90,7 +90,7 @@ contract CoopTest is Test {
         coop = Coop(payable(coopAddress));
     }
 
-    function test_InitialState() public {
+    function test_InitialState() public view {
         assertEq(
             uint256(coop.marketType()),
             uint256(ICoop.MarketType.BONDING_CURVE)
@@ -116,5 +116,31 @@ contract CoopTest is Test {
             0,
             0
         );
+    }
+
+    function test_TokenBuyQuote() public view {
+        // Test with zero current supply
+        uint256 quote1 = coop.getTokenBuyQuote(1 ether);
+        assertGt(quote1, 0, "Quote should be positive");
+
+        // Test with some existing supply
+        uint256 buyAmount = 100 ether;
+        uint256 quote2 = coop.getTokenBuyQuote(buyAmount);
+        assertGt(quote2, 0, "Quote should be positive");
+
+        // Test that buying more tokens costs more ETH
+        uint256 smallerBuyAmount = 50 ether;
+        uint256 quote3 = coop.getTokenBuyQuote(smallerBuyAmount);
+        assertGt(quote2, quote3, "Buying more tokens should cost more ETH");
+
+        // Test precision - very small amount
+        uint256 tinyAmount = 0.000001 ether;
+        uint256 quote4 = coop.getTokenBuyQuote(tinyAmount);
+        assertGt(quote4, 0, "Should handle tiny amounts");
+
+        // Test precision - very large amount
+        uint256 largeAmount = 1_000_000 ether;
+        uint256 quote5 = coop.getTokenBuyQuote(largeAmount);
+        assertGt(quote5, quote2, "Large amounts should cost more");
     }
 }
