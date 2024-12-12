@@ -31,19 +31,10 @@ contract CoopTest is Test {
         bondingCurve = new BondingCurve();
 
         // Deploy Coop implementation
-        coopImpl = new Coop(
-            PROTOCOL_FEE_RECIPIENT,
-            PROTOCOL_REWARDS,
-            WETH,
-            NFT_POSITION_MANAGER,
-            SWAP_ROUTER
-        );
+        coopImpl = new Coop(PROTOCOL_FEE_RECIPIENT, PROTOCOL_REWARDS, WETH, NFT_POSITION_MANAGER, SWAP_ROUTER);
 
         // Deploy factory implementation
-        factoryImpl = new CoopFactoryImpl(
-            address(coopImpl),
-            address(bondingCurve)
-        );
+        factoryImpl = new CoopFactoryImpl(address(coopImpl), address(bondingCurve));
 
         // Initialize factory implementation
         bytes memory initData = abi.encodeWithSelector(
@@ -57,44 +48,24 @@ contract CoopTest is Test {
         // Setup mock NFT Position Manager behavior
         vm.mockCall(
             NFT_POSITION_MANAGER,
-            abi.encodeWithSelector(
-                INonfungiblePositionManager
-                    .createAndInitializePoolIfNecessary
-                    .selector
-            ),
+            abi.encodeWithSelector(INonfungiblePositionManager.createAndInitializePoolIfNecessary.selector),
             abi.encode(MOCK_POOL)
         );
 
         // Setup mock WETH behavior
-        vm.mockCall(
-            WETH,
-            abi.encodeWithSelector(IWETH.deposit.selector),
-            abi.encode()
-        );
+        vm.mockCall(WETH, abi.encodeWithSelector(IWETH.deposit.selector), abi.encode());
 
-        vm.mockCall(
-            WETH,
-            abi.encodeWithSelector(IWETH.approve.selector),
-            abi.encode(true)
-        );
+        vm.mockCall(WETH, abi.encodeWithSelector(IWETH.approve.selector), abi.encode(true));
 
         // Deploy Coop token through factory
-        address coopAddress = CoopFactoryImpl(address(factory)).deploy(
-            TOKEN_CREATOR,
-            PLATFORM_REFERRER,
-            "test-uri",
-            "TEST",
-            "TST"
-        );
+        address coopAddress =
+            CoopFactoryImpl(address(factory)).deploy(TOKEN_CREATOR, PLATFORM_REFERRER, "test-uri", "TEST", "TST");
 
         coop = Coop(payable(coopAddress));
     }
 
     function test_InitialState() public view {
-        assertEq(
-            uint256(coop.marketType()),
-            uint256(ICoop.MarketType.BONDING_CURVE)
-        );
+        assertEq(uint256(coop.marketType()), uint256(ICoop.MarketType.BONDING_CURVE));
         assertEq(coop.tokenCreator(), TOKEN_CREATOR);
         assertEq(coop.platformReferrer(), PLATFORM_REFERRER);
         assertEq(address(coop.bondingCurve()), address(bondingCurve));
@@ -107,15 +78,7 @@ contract CoopTest is Test {
         vm.deal(address(this), tooSmall);
 
         vm.expectRevert(ICoop.EthAmountTooSmall.selector);
-        coop.buy{value: tooSmall}(
-            address(this),
-            address(this),
-            address(0),
-            "",
-            ICoop.MarketType.BONDING_CURVE,
-            0,
-            0
-        );
+        coop.buy{value: tooSmall}(address(this), address(this), address(0), "", ICoop.MarketType.BONDING_CURVE, 0, 0);
     }
 
     function test_TokenBuyQuote() public view {
