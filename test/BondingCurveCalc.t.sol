@@ -16,7 +16,7 @@ contract BondingCurveCalcTest is Test {
     function testCalculateGraduationCost() public {
         // Calculate ETH needed to buy PRIMARY_MARKET_SUPPLY tokens starting from 0 supply
         uint256 ethRequired = bondingCurve.getTokenBuyQuote(0, PRIMARY_MARKET_SUPPLY);
-        
+
         // Convert to human readable ETH amount
         uint256 ethInWhole = ethRequired / 1e18;
         uint256 ethDecimal = (ethRequired % 1e18) / 1e16; // Get 2 decimal places
@@ -31,11 +31,11 @@ contract BondingCurveCalcTest is Test {
         uint256 currentSupply = 0;
         uint256 totalEthRequired = 0;
 
-        for(uint256 i = 0; i < 4; i++) {
+        for (uint256 i = 0; i < 4; i++) {
             uint256 ethForChunk = bondingCurve.getTokenBuyQuote(currentSupply, chunkSize);
             totalEthRequired += ethForChunk;
             currentSupply += chunkSize;
-            
+
             console.log("Chunk %s cost: %s ETH", i + 1, ethForChunk / 1e18);
         }
 
@@ -55,4 +55,4 @@ contract BondingCurveCalcTest is Test {
         console.log("Cost of last token (in wei):", ethRequired);
         console.log("Cost of last token (in ETH): %s ETH", ethRequired / 1e18);
     }
-} 
+}
