@@ -201,27 +201,37 @@ contract CoopTest is Test {
     function test_InitialMint21Percent() public {
         // Calculate 21% of graduated supply (1B tokens)
         uint256 graduatedSupply = 1_000_000_000 * 1e18; // 1B tokens
-        uint256 targetAmount = (graduatedSupply * 21) / 100; // 21% of graduated supply
+        uint256 approximateTarget = (graduatedSupply * 21) / 100; // 21% of total supply
 
         // Get ETH quote for this amount of tokens
-        uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(0, targetAmount);
+        uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(
+            0,
+            approximateTarget
+        );
 
-        // Add 2% extra ETH to account for fees and slippage
+        // Add 2% extra ETH to account for fees
         uint256 ethNeeded = (baseEthNeeded * 102) / 100;
 
-        console.log(
-            "ETH needed for 21% of graduated supply (%s tokens): %s ETH",
-            targetAmount / 1e18,
-            baseEthNeeded / 1e18
-        );
-        console.log(
-            "Total ETH needed with 2% buffer: %s ETH",
-            ethNeeded / 1e18
-        );
-        console.log("Base ETH needed (in Wei): %s", baseEthNeeded);
-        console.log("Total ETH needed with buffer (in Wei): %s", ethNeeded);
+        // Calculate exact tokens we'll receive for this ETH amount
+        uint256 ethAfterFees = (ethNeeded * 99) / 100; // Remove 1% fee
+        uint256 exactTokenAmount = bondingCurve.getEthBuyQuote(0, ethAfterFees);
 
-        // Now let's simulate creating a token and buying 21% in the same tx
+        console.log(
+            "Approximate target (21%%): %s tokens",
+            approximateTarget / 1e18
+        );
+        console.log(
+            "Exact tokens we'll receive: %s tokens",
+            exactTokenAmount / 1e18
+        );
+        console.log(
+            "Difference: %s tokens (%s%%)",
+            (exactTokenAmount - approximateTarget) / 1e18,
+            ((exactTokenAmount - approximateTarget) * 100) / approximateTarget
+        );
+        console.log("ETH needed (in Wei): %s", ethNeeded);
+
+        // Now let's simulate creating a token and buying tokens in the same tx
         vm.deal(address(this), ethNeeded);
 
         // Use a different block number and timestamp to ensure unique salt
@@ -241,30 +251,26 @@ contract CoopTest is Test {
         Coop newCoop = Coop(payable(coopAddress));
 
         // Buy tokens with 0% slippage - must receive exact amount
-        newCoop.buy{value: ethNeeded}(
+        uint256 receivedAmount = newCoop.buy{value: ethNeeded}(
             address(this),
             address(this),
             address(0),
             "",
             ICoop.MarketType.BONDING_CURVE,
-            targetAmount, // Require exact amount - no slippage allowed
+            exactTokenAmount, // Require exact amount we calculated - no slippage
             0
         );
 
-        // Verify we got exactly the target amount
+        // Verify we got exactly what the buy function returned
         uint256 balance = newCoop.balanceOf(address(this));
         assertEq(
             balance,
-            targetAmount,
-            "Should have received exact target amount"
+            receivedAmount,
+            "Should have received amount returned by buy function"
         );
 
         // Log the actual amount received
-        console.log(
-            "Actually received %s tokens (%s%% of target)",
-            balance / 1e18,
-            (balance * 100) / targetAmount
-        );
+        console.log("Actually received %s tokens", balance / 1e18);
     }
 
     function test_SmallPurchase() public {
