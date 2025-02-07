@@ -33,10 +33,19 @@ contract CoopTest is Test {
         bondingCurve = new BondingCurve();
 
         // Deploy Coop implementation
-        coopImpl = new Coop(PROTOCOL_FEE_RECIPIENT, PROTOCOL_REWARDS, WETH, NFT_POSITION_MANAGER, SWAP_ROUTER);
+        coopImpl = new Coop(
+            PROTOCOL_FEE_RECIPIENT,
+            PROTOCOL_REWARDS,
+            WETH,
+            NFT_POSITION_MANAGER,
+            SWAP_ROUTER
+        );
 
         // Deploy factory implementation
-        factoryImpl = new CoopFactoryImpl(address(coopImpl), address(bondingCurve));
+        factoryImpl = new CoopFactoryImpl(
+            address(coopImpl),
+            address(bondingCurve)
+        );
 
         // Initialize factory implementation
         bytes memory initData = abi.encodeWithSelector(
@@ -50,27 +59,51 @@ contract CoopTest is Test {
         // Setup mock NFT Position Manager behavior
         vm.mockCall(
             NFT_POSITION_MANAGER,
-            abi.encodeWithSelector(INonfungiblePositionManager.createAndInitializePoolIfNecessary.selector),
+            abi.encodeWithSelector(
+                INonfungiblePositionManager
+                    .createAndInitializePoolIfNecessary
+                    .selector
+            ),
             abi.encode(MOCK_POOL)
         );
 
         // Setup mock WETH behavior
-        vm.mockCall(WETH, abi.encodeWithSelector(IWETH.deposit.selector), abi.encode());
+        vm.mockCall(
+            WETH,
+            abi.encodeWithSelector(IWETH.deposit.selector),
+            abi.encode()
+        );
 
-        vm.mockCall(WETH, abi.encodeWithSelector(IWETH.approve.selector), abi.encode(true));
+        vm.mockCall(
+            WETH,
+            abi.encodeWithSelector(IWETH.approve.selector),
+            abi.encode(true)
+        );
 
         // Setup mock Protocol Rewards behavior
-        vm.mockCall(PROTOCOL_REWARDS, abi.encodeWithSelector(IProtocolRewards.depositBatch.selector), abi.encode());
+        vm.mockCall(
+            PROTOCOL_REWARDS,
+            abi.encodeWithSelector(IProtocolRewards.depositBatch.selector),
+            abi.encode()
+        );
 
         // Deploy Coop token through factory
-        address coopAddress =
-            CoopFactoryImpl(address(factory)).deploy(TOKEN_CREATOR, PLATFORM_REFERRER, "test-uri", "TEST", "TST");
+        address coopAddress = CoopFactoryImpl(address(factory)).deploy(
+            TOKEN_CREATOR,
+            PLATFORM_REFERRER,
+            "test-uri",
+            "TEST",
+            "TST"
+        );
 
         coop = Coop(payable(coopAddress));
     }
 
     function test_InitialState() public view {
-        assertEq(uint256(coop.marketType()), uint256(ICoop.MarketType.BONDING_CURVE));
+        assertEq(
+            uint256(coop.marketType()),
+            uint256(ICoop.MarketType.BONDING_CURVE)
+        );
         assertEq(coop.tokenCreator(), TOKEN_CREATOR);
         assertEq(coop.platformReferrer(), PLATFORM_REFERRER);
         assertEq(address(coop.bondingCurve()), address(bondingCurve));
@@ -83,7 +116,15 @@ contract CoopTest is Test {
         vm.deal(address(this), tooSmall);
 
         vm.expectRevert(ICoop.EthAmountTooSmall.selector);
-        coop.buy{value: tooSmall}(address(this), address(this), address(0), "", ICoop.MarketType.BONDING_CURVE, 0, 0);
+        coop.buy{value: tooSmall}(
+            address(this),
+            address(this),
+            address(0),
+            "",
+            ICoop.MarketType.BONDING_CURVE,
+            0,
+            0
+        );
     }
 
     function test_TokenBuyQuote() public view {
@@ -138,18 +179,20 @@ contract CoopTest is Test {
         // Get ETH quote for this amount of tokens from bonding curve
         uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(0, targetAmount);
 
-        // Add 2% buffer for fees and slippage
-        uint256 ethWithBuffer = (baseEthNeeded * 102) / 100;
+        // Add 1% for protocol fee
+        uint256 ethWithFee = (baseEthNeeded * 101) / 100;
 
         console.log(
-            "Base ETH needed for 21% of graduated supply (%s tokens): %s ETH", targetAmount / 1e18, baseEthNeeded / 1e18
+            "Base ETH needed for 21% of graduated supply (%s tokens): %s ETH",
+            targetAmount / 1e18,
+            baseEthNeeded / 1e18
         );
 
-        console.log("Total ETH needed with 2% buffer: %s ETH", ethWithBuffer / 1e18);
+        console.log("Total ETH needed with 1% fee: %s ETH", ethWithFee / 1e18);
 
         // Also show in Wei for precision
         console.log("Base ETH needed (in Wei): %s", baseEthNeeded);
-        console.log("Total ETH needed with buffer (in Wei): %s", ethWithBuffer);
+        console.log("Total ETH needed with fee (in Wei): %s", ethWithFee);
     }
 
     function test_InitialMint21Percent() public {
@@ -158,17 +201,26 @@ contract CoopTest is Test {
         uint256 approximateTarget = (graduatedSupply * 21) / 100; // 21% of total supply
 
         // Get ETH quote for this amount of tokens
-        uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(0, approximateTarget);
+        uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(
+            0,
+            approximateTarget
+        );
 
-        // Add 2% extra ETH to account for fees
-        uint256 ethNeeded = (baseEthNeeded * 102) / 100;
+        // Add 1% for protocol fee
+        uint256 ethNeeded = (baseEthNeeded * 101) / 100;
 
         // Calculate exact tokens we'll receive for this ETH amount
         uint256 ethAfterFees = (ethNeeded * 99) / 100; // Remove 1% fee
         uint256 exactTokenAmount = bondingCurve.getEthBuyQuote(0, ethAfterFees);
 
-        console.log("Approximate target (21%%): %s tokens", approximateTarget / 1e18);
-        console.log("Exact tokens we'll receive: %s tokens", exactTokenAmount / 1e18);
+        console.log(
+            "Approximate target (21%%): %s tokens",
+            approximateTarget / 1e18
+        );
+        console.log(
+            "Exact tokens we'll receive: %s tokens",
+            exactTokenAmount / 1e18
+        );
         console.log(
             "Difference: %s tokens (%s%%)",
             (exactTokenAmount - approximateTarget) / 1e18,
@@ -185,7 +237,11 @@ contract CoopTest is Test {
 
         // Deploy new token with unique parameters
         address coopAddress = CoopFactoryImpl(address(factory)).deploy(
-            TOKEN_CREATOR, PLATFORM_REFERRER, string(abi.encodePacked("test-uri-", block.timestamp)), "MUSIC", "MSC"
+            TOKEN_CREATOR,
+            PLATFORM_REFERRER,
+            string(abi.encodePacked("test-uri-", block.timestamp)),
+            "MUSIC",
+            "MSC"
         );
 
         require(coopAddress != address(0), "Deployment failed");
@@ -198,13 +254,17 @@ contract CoopTest is Test {
             address(0),
             "",
             ICoop.MarketType.BONDING_CURVE,
-            exactTokenAmount, // Require exact amount we calculated - no slippage
+            exactTokenAmount, // Require exact amount - no slippage
             0
         );
 
         // Verify we got exactly what the buy function returned
         uint256 balance = newCoop.balanceOf(address(this));
-        assertEq(balance, receivedAmount, "Should have received amount returned by buy function");
+        assertEq(
+            balance,
+            receivedAmount,
+            "Should have received amount returned by buy function"
+        );
 
         // Log the actual amount received
         console.log("Actually received %s tokens", balance / 1e18);
@@ -212,47 +272,132 @@ contract CoopTest is Test {
 
     function test_SmallPurchase() public {
         // Try to buy 1% of primary supply
-        uint256 primarySupply = 800_000_000 ether; // 800M tokens
+        uint256 primarySupply = 800_000_000 * 1e18; // 800M tokens
         uint256 targetAmount = primarySupply / 100; // 1% of primary supply
 
         // Get ETH quote for this amount of tokens
         uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(0, targetAmount);
 
-        // Add 2% extra ETH to account for fees and slippage
-        uint256 ethNeeded = (baseEthNeeded * 102) / 100;
+        // Add 1% for protocol fee
+        uint256 ethNeeded = (baseEthNeeded * 101) / 100;
 
+        // Calculate exact tokens we'll receive
+        uint256 ethAfterFees = (ethNeeded * 99) / 100; // Remove 1% fee
+        uint256 exactTokenAmount = bondingCurve.getEthBuyQuote(0, ethAfterFees);
+
+        console.log("Target amount: %s tokens", targetAmount / 1e18);
         console.log(
-            "ETH needed for 1% of primary supply (%s tokens): %s ETH (including extra for fees)",
-            targetAmount / 1 ether,
-            ethNeeded / 1 ether
+            "Exact tokens we'll receive: %s tokens",
+            exactTokenAmount / 1e18
         );
+        console.log("ETH needed (in Wei): %s", ethNeeded);
 
-        // Now let's simulate creating a token and buying 1% in the same tx
+        // Now let's simulate creating a token and buying tokens in the same tx
         vm.deal(address(this), ethNeeded);
 
         // Deploy new token with unique parameters
-        address coopAddress =
-            CoopFactoryImpl(address(factory)).deploy(TOKEN_CREATOR, PLATFORM_REFERRER, "test-uri-small", "MUSIC", "MSC");
+        address coopAddress = CoopFactoryImpl(address(factory)).deploy(
+            TOKEN_CREATOR,
+            PLATFORM_REFERRER,
+            "test-uri-small",
+            "MUSIC",
+            "MSC"
+        );
 
         require(coopAddress != address(0), "Deployment failed");
         Coop newCoop = Coop(payable(coopAddress));
 
-        // Buy tokens
-        newCoop.buy{value: ethNeeded}(
+        // Buy tokens with 0% slippage
+        uint256 receivedAmount = newCoop.buy{value: ethNeeded}(
             address(this),
             address(this),
             address(0),
             "",
             ICoop.MarketType.BONDING_CURVE,
-            (targetAmount * 95) / 100, // Allow for 5% slippage
+            exactTokenAmount, // Require exact amount - no slippage
             0
         );
 
-        // Verify we got at least 95% of the target amount (accounting for fees)
+        // Verify we got exactly what we expected
         uint256 balance = newCoop.balanceOf(address(this));
-        assertGe(balance, (targetAmount * 95) / 100, "Should have received at least 95% of target amount");
+        assertEq(
+            balance,
+            receivedAmount,
+            "Should have received exact amount returned by buy function"
+        );
 
         // Log the actual amount received
-        console.log("Actually received %s tokens (%s%% of target)", balance / 1 ether, (balance * 100) / targetAmount);
+        console.log("Actually received %s tokens", balance / 1e18);
+    }
+
+    function test_Deploy21PercentWithValue() public {
+        // Calculate 21% of graduated supply (1B tokens)
+        uint256 graduatedSupply = 1_000_000_000 * 1e18; // 1B tokens
+        uint256 approximateTarget = (graduatedSupply * 21) / 100; // 21% of total supply
+
+        // Get ETH quote for this amount of tokens
+        uint256 baseEthNeeded = bondingCurve.getTokenBuyQuote(
+            0,
+            approximateTarget
+        );
+
+        // Add 1% for protocol fee
+        uint256 ethNeeded = (baseEthNeeded * 101) / 100;
+
+        console.log(
+            "Approximate target (21%%): %s tokens",
+            approximateTarget / 1e18
+        );
+        console.log("ETH needed (in Wei): %s", ethNeeded);
+
+        // Fund our address for deployment
+        vm.deal(address(this), ethNeeded);
+
+        // Use a different block number and timestamp to ensure unique salt
+        vm.roll(block.number + 1);
+        vm.warp(block.timestamp + 1);
+
+        // Deploy new token with ETH value - this will trigger initial buy in initialize
+        address coopAddress = CoopFactoryImpl(address(factory)).deploy{
+            value: ethNeeded
+        }(
+            TOKEN_CREATOR,
+            PLATFORM_REFERRER,
+            string(abi.encodePacked("test-uri-", block.timestamp)),
+            "MUSIC",
+            "MSC"
+        );
+
+        require(coopAddress != address(0), "Deployment failed");
+        Coop newCoop = Coop(payable(coopAddress));
+
+        // Get the actual balance after deployment
+        uint256 balance = newCoop.balanceOf(TOKEN_CREATOR);
+
+        // Log results
+        console.log("Creator received %s tokens", balance / 1e18);
+        console.log(
+            "Difference from target: %s tokens (%s%%)",
+            (balance - approximateTarget) / 1e18,
+            ((balance - approximateTarget) * 100) / approximateTarget
+        );
+
+        // Verify the token creator received tokens
+        assertGt(balance, 0, "Token creator should have received tokens");
+
+        // Verify we got approximately 21% (within 1%)
+        assertApproxEqRel(
+            balance,
+            approximateTarget,
+            0.01e18, // 1% tolerance
+            "Should have received approximately 21% of supply"
+        );
+
+        // Verify market type is still bonding curve
+        assertEq(
+            uint256(newCoop.marketType()),
+            uint256(ICoop.MarketType.BONDING_CURVE),
+            "Market type should be bonding curve"
+        );
     }
 }
